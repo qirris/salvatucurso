@@ -2,7 +2,8 @@
 const assert = require('assert/strict'), fs = require('fs'), vm = require('vm');
 function environment(options = {}) {
   const nodes = new Map(), values = {}, timers = new Map(), events = {}, calls = [], reminderStates = [];
-  let nextTimer = 0, revisionNumber = 1, offline = false, blocked = false, exported = 0, courseApi;
+  const sessionValues = { salvatucursoTemporal: 'pendiente' }, replacements = [];
+  let nextTimer = 0, revisionNumber = 1, offline = false, blocked = false, exported = 0, courseApi, deleteFailure = false, reminderCleanup = 0;
   const clone = value => JSON.parse(JSON.stringify(value));
   const guest = { version: 2, asignaturas: [{ id: 'local', nombre: 'Local' }], tareas: [], faltas: [], config: {} };
   let serverUser = options.anonymous ? null : { id: 'u1', email: 'prueba@example.test' };
@@ -25,15 +26,18 @@ function environment(options = {}) {
   const storage = { getItem: key => values[key] ?? null,
     setItem(key, value) { if (blocked) throw Error('Guardado bloqueado'); values[key] = String(value); },
     removeItem: key => { delete values[key]; }, key: index => Object.keys(values)[index] ?? null,
+    clear() { Object.keys(values).forEach(key => delete values[key]); },
     get length() { return Object.keys(values).length; } };
+  const sessionStorage = { getItem: key => sessionValues[key] ?? null, setItem: (key, value) => { sessionValues[key] = String(value); },
+    removeItem: key => { delete sessionValues[key]; }, clear() { Object.keys(sessionValues).forEach(key => delete sessionValues[key]); } };
   values.miAsistenciaState = JSON.stringify(guest);
-  const context = { console, Date, JSON, URL, URLSearchParams, AbortController, document: doc, localStorage: storage,
+  const context = { console, Date, JSON, URL, URLSearchParams, AbortController, document: doc, localStorage: storage, sessionStorage,
     window: { SalvaTuCursoPushConfig: { enabled: true, apiBase: '/api', email: true, google: true }, addEventListener(name, fn) { events[name] = fn; } },
-    location: { origin: 'https://prueba.example', pathname: '/index.html', search: '', assign() {} }, history: { replaceState() {} },
+    location: { origin: 'https://prueba.example', pathname: '/index.html', search: '', assign() {}, replace(url) { replacements.push(url); } }, history: { replaceState() {} },
     state: clone(guest), STORAGE_KEY: 'miAsistenciaState', DEFAULT_STATE: clone(guest), $: node,
     normalizeState: clone, isStoredStateCurrent: () => values.miAsistenciaState === JSON.stringify(context.state),
     saveState() { values.miAsistenciaState = JSON.stringify(context.state); courseApi?.queueSync(); },
-    render() { courseApi.renderSettings(); }, UndoManager: { clear() {} }, TaskReminders: { queueSync() {}, renderSettings() { reminderStates.push(courseApi?.ready() || false); }, async disableForLogout() { return true; } },
+    render() { courseApi.renderSettings(); }, UndoManager: { clear() {} }, TaskReminders: { queueSync() {}, renderSettings() { reminderStates.push(courseApi?.ready() || false); }, async disableForLogout() { return true; }, async cleanupAfterAccountDeletion() { reminderCleanup++; } },
     exportJSON() { exported++; }, importJSON() {},
     setTimeout(fn, delay) { timers.set(++nextTimer, { fn, delay }); return nextTimer; }, clearTimeout(id) { timers.delete(id); },
     async fetch(url, init) {
@@ -43,6 +47,11 @@ function environment(options = {}) {
       if (url.endsWith('auth/get-session')) return reply(serverUser ? { user: serverUser } : null);
       if (url.endsWith('auth/sign-in/email')) { serverUser = { id: 'u1', email: 'prueba@example.test' }; return reply({}); }
       if (url.endsWith('auth/sign-out')) { serverUser = null; return reply({}); }
+      if (url.endsWith('/account') && init.method === 'DELETE') {
+        if (deleteFailure) return reply({ error: 'Fallo simulado del servidor' }, 503);
+        if (body.confirmation !== 'ELIMINAR') return reply({ error: 'Confirmación incorrecta' }, 400);
+        serverUser = null; return reply({ ok: true });
+      }
       if (url.endsWith('/course')) {
         if (init.method === 'GET') return reply(server);
         if (body.revision !== server.revision) return reply({ error: 'Conflicto' }, 409);
@@ -53,10 +62,11 @@ function environment(options = {}) {
   };
   vm.createContext(context); vm.runInContext(fs.readFileSync('src/js/account.js', 'utf8') + '\nthis.api = CourseAccount;', context);
   courseApi = context.api; courseApi.bind();
-  return { context, api: courseApi, node, values, calls, timers, events, guest, reminderStates,
+  return { context, api: courseApi, node, values, sessionValues, calls, timers, events, guest, reminderStates, replacements,
     get server() { return server; }, get exported() { return exported; },
     changeServer(state) { server = { state: clone(state), revision: 'r' + (++revisionNumber) }; },
-    offline(value) { offline = value; }, blocked(value) { blocked = value; } };
+    offline(value) { offline = value; }, blocked(value) { blocked = value; }, failDelete(value) { deleteFailure = value; },
+    get reminderCleanup() { return reminderCleanup; } };
 }
 (async () => {
   const e = environment(); await e.api.started();
@@ -103,5 +113,32 @@ function environment(options = {}) {
   assert.equal(googleOnly.node('#auth-options').hidden, true);
   assert.equal(googleOnly.node('#auth-submit').hidden, true);
   assert.equal(googleOnly.context.document.activeElement, googleOnly.node('#auth-google'), 'el foco empieza en el acceso disponible');
-  console.log('OK: revisión inicial, datos locales y de cuenta, cambios sin conexión, conflictos, copias, fallos de guardado, salida y contraseñas no persistidas');
+  assert.equal(googleOnly.node('#account-delete-panel').hidden, true, 'sin sesión no se ofrece eliminar una cuenta');
+
+  const d = environment(); await d.api.started(); await d.node('#sync-use-cloud').click();
+  assert.equal(d.node('#account-delete-panel').hidden, false, 'la eliminación aparece únicamente con sesión autenticada');
+  d.node('#account-delete-open').click();
+  assert.equal(d.node('#dialog-delete-account').open, true);
+  assert.equal(d.context.document.activeElement, d.node('#account-delete-confirmation'));
+  d.node('#account-delete-confirmation').value = 'eliminar'; d.node('#account-delete-confirmation').input();
+  assert.equal(d.node('#account-delete-submit').disabled, true, 'exige la palabra exacta');
+  d.node('#account-delete-export').click(); assert.equal(d.exported, 1, 'permite descargar antes una copia');
+  const beforeCancel = JSON.stringify(d.values); d.node('#account-delete-cancel').click();
+  assert.equal(JSON.stringify(d.values), beforeCancel, 'cancelar conserva todos los datos locales');
+  assert.equal(d.context.document.activeElement, d.node('#account-delete-open'), 'al cerrar devuelve el foco al origen');
+
+  d.node('#account-delete-open').click(); d.node('#account-delete-confirmation').value = 'ELIMINAR'; d.node('#account-delete-confirmation').input();
+  d.failDelete(true); await d.node('#account-delete-form').submit({ preventDefault() {} });
+  assert.ok(d.values.miAsistenciaState, 'un fallo del servidor conserva los datos del dispositivo');
+  assert.equal(d.replacements.length, 0); assert.match(d.node('#account-delete-status').textContent, /No se ha borrado nada/);
+  d.failDelete(false);
+  const firstDelete = d.node('#account-delete-form').submit({ preventDefault() {} });
+  const repeatedDelete = d.node('#account-delete-form').submit({ preventDefault() {} });
+  await Promise.all([firstDelete, repeatedDelete]);
+  assert.equal(d.calls.filter(call => call.url.endsWith('/account') && call.method === 'DELETE').length, 2, 'tras el fallo, la doble pulsación solo añade un envío correcto');
+  assert.deepEqual(Object.keys(d.values), [], 'el éxito borra todo el almacenamiento local');
+  assert.deepEqual(Object.keys(d.sessionValues), [], 'el éxito borra el almacenamiento de sesión');
+  assert.equal(d.reminderCleanup, 1, 'cancela la suscripción Push del navegador');
+  assert.deepEqual(d.replacements, ['https://prueba.example/index.html'], 'reinicia la app como una instalación nueva');
+  console.log('OK: sincronización, copias, salida, acceso y eliminación completa de cuenta con confirmación, cancelación, fallo seguro y doble pulsación');
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -3,7 +3,7 @@ import { validateSubscription, notificationPayload } from './validation.mjs';
 import { jobsForCourse, reminderPrefs, validateCourse } from './planning.mjs';
 import webpush from 'web-push';
 
-const json = (body, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
+const json = (body, status = 200, headers = {}) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store', ...headers } });
 async function readBody(request) {
   const reader = request.body?.getReader();
   if (!reader) throw new Error('Faltan datos');
@@ -75,6 +75,22 @@ async function deviceAction(env, userId, input) {
   if (results.at(-1).results[0]?.revision !== course.revision) return json({ error: 'El curso cambió; vuelve a actualizar los avisos' }, 409);
   return json({ ok: true, count: jobs.length });
 }
+async function deleteAccount(env, user) {
+  const db = env.DB, userId = user.id;
+  const results = await db.batch([
+    db.prepare('DELETE FROM push_jobs WHERE device_id IN (SELECT id FROM push_devices WHERE user_id=?)').bind(userId),
+    db.prepare('DELETE FROM push_devices WHERE user_id=?').bind(userId),
+    db.prepare('DELETE FROM course_backups WHERE user_id=?').bind(userId),
+    db.prepare('DELETE FROM courses WHERE user_id=?').bind(userId),
+    db.prepare('DELETE FROM "session" WHERE "userId"=?').bind(userId),
+    db.prepare('DELETE FROM "account" WHERE "userId"=?').bind(userId),
+    db.prepare('DELETE FROM "verification" WHERE "identifier"=? OR "value"=?').bind(user.email, userId),
+    db.prepare('DELETE FROM "rateLimit" WHERE "key" LIKE ?').bind('curso:' + userId + ':%'),
+    db.prepare('DELETE FROM "user" WHERE "id"=?').bind(userId)
+  ]);
+  if (results.at(-1).meta.changes !== 1) return json({ error: 'La cuenta ya no está disponible' }, 409);
+  return json({ ok: true }, 200, { 'Clear-Site-Data': '"cookies"' });
+}
 export async function dispatch(env, sender = send) {
   const now = Date.now(), db = env.DB, claim = crypto.randomUUID();
   await db.batch([
@@ -125,6 +141,11 @@ export default {
       }
       if (url.pathname === '/api/course' && request.method === 'PUT') return await putCourse(env, userId, await readBody(request));
       if (url.pathname === '/api/push' && request.method === 'POST') return await deviceAction(env, userId, await readBody(request));
+      if (url.pathname === '/api/account' && request.method === 'DELETE') {
+        const input = await readBody(request);
+        if (!input || typeof input !== 'object' || Array.isArray(input) || input.confirmation !== 'ELIMINAR') return json({ error: 'Escribe ELIMINAR para confirmar' }, 400);
+        return await deleteAccount(env, session.user);
+      }
       return json({ error: 'No disponible' }, 404);
     } catch (error) { return json({ error: 'No se ha podido completar la operación' }, error instanceof SyntaxError ? 400 : 503); }
   },

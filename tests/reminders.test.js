@@ -115,6 +115,11 @@ function environment(options = {}) {
   assert.equal(blocked.calls.filter(item => item === 'subscribe').length, 0, 'no suscribe si no puede persistir');
   const offline = environment({ syncError: true }); await offline.node('#push-enable').click();
   assert.equal(offline.unsubscribed, 1, 'revierte una suscripción nueva si falla la conexión');
+  const removedAccount = environment(); await removedAccount.node('#push-enable').click();
+  const serverCallsBeforeCleanup = removedAccount.calls.filter(item => item.body?.action === 'disable').length;
+  await removedAccount.api.cleanupAfterAccountDeletion();
+  assert.equal(removedAccount.unsubscribed, 1, 'retira localmente la suscripción tras borrar la cuenta');
+  assert.equal(removedAccount.calls.filter(item => item.body?.action === 'disable').length, serverCallsBeforeCleanup, 'no llama a una cuenta que ya no existe');
 
   const { validateSubscription, validateJobs, notificationPayload } = await import(pathToFileURL(path.resolve('cloudflare/validation.mjs')));
   const subscription = { endpoint: 'https://fcm.googleapis.com/fcm/send/test', keys: { p256dh: 'B'.repeat(87), auth: 'A'.repeat(22) } };

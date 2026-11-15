@@ -17,7 +17,8 @@ assert.match(page, /nombre, dirección de correo, imagen de perfil/);
 assert.match(page, /no recibe tu contraseña de Google ni accede a Drive, Gmail, Calendario, contactos o archivos/i);
 assert.match(page, /No vendemos, alquilamos ni cedemos tus datos para publicidad/i);
 assert.match(page, /Cloudflare configurada con jurisdicción de la Unión Europea/i);
-assert.match(page, /solicites su eliminación/i);
+assert.match(page, /Ajustes → Tu cuenta y tus datos → Eliminar mi cuenta/i);
+assert.match(page, /datos locales de otros dispositivos no pueden borrarse a distancia/i);
 assert.match(page, /Si eres menor/i);
 
 assert.match(styles, /prefers-color-scheme: dark/);
@@ -28,7 +29,7 @@ assert.match(index, /href="privacidad\.html">Privacidad<\/a>/);
 assert.match(build, /'privacidad\.html'/);
 assert.match(worker, /'\.\/privacidad\.html'/);
 assert.match(worker, /'\.\/src\/css\/legal\.css'/);
-assert.match(worker, /salvatucurso-v47/);
+assert.match(worker, /salvatucurso-v48/);
 
 assert.doesNotMatch(page, /client_secret|api[_-]?key|private[_-]?key/i);
 

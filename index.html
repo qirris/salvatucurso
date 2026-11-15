@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
   <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
-  <link rel="stylesheet" href="src/css/styles.css?v=43">
+  <link rel="stylesheet" href="src/css/styles.css?v=44">
 </head>
 <body>
   <div class="app-shell">
@@ -585,6 +585,13 @@
               <button class="btn btn-secondary" id="account-import" type="button">Importar copia</button>
             </div>
           </details>
+          <div class="account-delete-zone" id="account-delete-panel" hidden>
+            <div>
+              <strong>Eliminar la cuenta</strong>
+              <p class="hint">Borra definitivamente la cuenta, el curso sincronizado, las copias y los avisos del servidor.</p>
+            </div>
+            <button class="btn btn-danger" id="account-delete-open" type="button">Eliminar mi cuenta</button>
+          </div>
         </div>
 
         <!-- 4. Instalar la aplicación (PWA) -->
@@ -667,6 +674,31 @@
         <p class="note" id="sync-review-status" role="status"></p>
       </div>
       <div class="dialog-actions sync-actions"><button class="btn btn-secondary" id="sync-cancel" type="button">Decidir después</button><button class="btn btn-secondary" id="sync-use-cloud" type="button">Usar los de la cuenta</button><button class="btn" id="sync-use-local" type="button">Usar los de este dispositivo</button></div>
+    </div>
+  </dialog>
+  <dialog id="dialog-delete-account" aria-labelledby="account-delete-title" aria-describedby="account-delete-description">
+    <div class="dialog-body">
+      <div class="dialog-head"><h3 id="account-delete-title">Eliminar tu cuenta</h3><button class="btn btn-ghost btn-sm" id="account-delete-close" type="button">Cerrar</button></div>
+      <div class="dialog-content">
+        <p class="note danger" id="account-delete-description"><strong>Esta acción es irreversible.</strong> No se crea una copia automáticamente.</p>
+        <p>Se eliminarán de Cloudflare:</p>
+        <ul class="account-delete-list">
+          <li>tu cuenta y la conexión con Google;</li>
+          <li>todas las sesiones, el curso sincronizado y sus cinco copias;</li>
+          <li>los dispositivos, las suscripciones y los avisos programados.</li>
+        </ul>
+        <p>En este dispositivo también se borrarán el curso local, el modo invitado, las copias, el tema, el zoom, las preferencias y los metadatos. La aplicación seguirá instalada.</p>
+        <p class="hint">Las copias locales de otros dispositivos no pueden borrarse a distancia, pero sus sesiones dejarán de funcionar. Puedes retirar esos datos desde cada navegador.</p>
+        <button class="btn btn-secondary" id="account-delete-export" type="button">Descargar una copia JSON</button>
+        <form id="account-delete-form" class="account-delete-form">
+          <div class="field">
+            <label for="account-delete-confirmation">Para confirmar, escribe <strong>ELIMINAR</strong></label>
+            <input id="account-delete-confirmation" type="text" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+          </div>
+        </form>
+        <p class="note" id="account-delete-status" role="status" aria-live="polite"></p>
+      </div>
+      <div class="dialog-actions"><button class="btn btn-secondary" id="account-delete-cancel" type="button">Cancelar</button><button class="btn btn-danger-solid" id="account-delete-submit" type="submit" form="account-delete-form" disabled>Eliminar definitivamente</button></div>
     </div>
   </dialog>
 
@@ -1036,8 +1068,8 @@
   <script src="src/js/history.js?v=43"></script>
   <script src="src/js/recovery.js?v=43"></script>
   <script src="src/js/push-config.js?v=43"></script>
-  <script src="src/js/account.js?v=44"></script>
-  <script src="src/js/reminders.js?v=43"></script>
+  <script src="src/js/account.js?v=45"></script>
+  <script src="src/js/reminders.js?v=44"></script>
   <script src="src/js/app.js?v=43"></script>
 
   <!-- Nodos ocultos de compatibilidad mientras se renueva la caché de la PWA -->

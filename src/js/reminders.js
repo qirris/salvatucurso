@@ -191,6 +191,17 @@ const TaskReminders = (() => {
     } catch (error) { message = 'No se han podido desactivar. Conéctate a internet y vuelve a intentarlo.'; return false; }
     finally { busy = false; renderSettings(); if (queued) queueSync(); }
   }
+  async function cleanupAfterAccountDeletion() {
+    clearTimeout(timer); timer = null; queued = false; retries = 0; syncedSignature = '';
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        const sub = reg && await reg.pushManager?.getSubscription();
+        if (sub) await sub.unsubscribe();
+      }
+    } catch (error) { /* La cuenta ya no existe; el servidor ha retirado el destino. */ }
+    prefs = { ...DEFAULTS }; busy = false; message = '';
+  }
   function saveSettings() {
     try {
       const next = normalize({ ...prefs, examDays: Number($('#push-exam-days').value), taskDays: Number($('#push-task-days').value), time: $('#push-time').value });
@@ -243,5 +254,6 @@ const TaskReminders = (() => {
     }
     queueSync(); renderSettings();
   }
-  return { normalize, buildJobs, renderSettings, bind, queueSync, disableForLogout: () => prefs.enabled ? disable() : Promise.resolve(true) };
+  return { normalize, buildJobs, renderSettings, bind, queueSync, cleanupAfterAccountDeletion,
+    disableForLogout: () => prefs.enabled ? disable() : Promise.resolve(true) };
 })();

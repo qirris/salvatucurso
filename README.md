@@ -85,6 +85,8 @@ Sin internet puedes seguir usando el curso guardado. Los cambios pendientes se e
 
 Para guardar una copia, entra en **Más → Ajustes → Tu cuenta y tus datos → Copias y traslado de datos → Descargar copia**. Puedes recuperarla con **Importar copia**. Si usas la app sin cuenta y borras los datos del navegador, necesitarás una copia para recuperarlos.
 
+Si ya no quieres conservar tu cuenta, entra en **Más → Ajustes → Tu cuenta y tus datos → Eliminar mi cuenta**. Antes puedes descargar una copia JSON. La eliminación retira definitivamente de Cloudflare la cuenta, sus sesiones, el curso, las copias y los avisos, y reinicia los datos del dispositivo actual. Las copias locales de otros dispositivos no se pueden borrar a distancia, aunque sus sesiones quedan invalidadas.
+
 GitHub contiene el código, la documentación y las capturas de ejemplo. Los cursos de las cuentas se guardan en Cloudflare, separados del repositorio. Las claves privadas no forman parte del código público.
 
 ## Avisos de exámenes y entregas

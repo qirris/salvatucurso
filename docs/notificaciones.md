@@ -14,6 +14,7 @@ La configuración pública solo habilita el acceso cuando existe un proveedor y 
 - Worker con recursos estáticos y API en el mismo origen: evita depender de cookies de terceros en Safari. La versión con cuentas se abre desde su dirección de Cloudflare.
 - D1 guarda usuarios, sesiones, curso, cinco copias recientes y recordatorios. Better Auth 1.7.22 gestiona Google, contraseñas, verificación y recuperación. No se implementan algoritmos de contraseñas propios.
 - Las sesiones usan cookies de Better Auth. No se guardan contraseñas ni tokens de sesión en localStorage. Los datos académicos y las copias locales siguen disponibles en este navegador.
+- La cuenta puede eliminarse desde Ajustes. `DELETE /api/account` exige sesión, mismo origen, límite de solicitudes y la confirmación literal `ELIMINAR`. Una única transacción retira usuario, conexión con Google, sesiones, curso, copias, dispositivos, avisos, verificaciones y límites asociados.
 - La implementación de correo admite verificaciones y recuperaciones mediante Cloudflare Email Service, pero está desactivada: AUTH_EMAIL_ENABLED=false y no hay binding EMAIL en el despliegue gratuito. Requiere un dominio habilitado y, para destinatarios arbitrarios, Workers Paid. A 13/11/2026, Workers parte de 5 USD/mes; Email Sending incluye 3000 correos mensuales y después 0,35 USD por 1000. No activar servicios de pago sin autorización.
 - El cron llama al Worker cada minuto; Web Push usa la clave VAPID privada del servidor. Los avisos no dependen de temporizadores de una pestaña abierta.
 
@@ -30,6 +31,8 @@ Cada actualización lleva la revisión que se ha leído. Si otro dispositivo gua
 Los cambios locales se agrupan antes de subirlos. Se consulta la cuenta cada 30 segundos mientras la app está visible y al recuperar visibilidad o conexión. Los formularios modificados y los diálogos abiertos provocan una revisión antes de aplicar cambios remotos. Sin internet, los cambios permanecen en el navegador y se envían cuando vuelve la conexión. Un cambio que aún no ha llegado al servidor no puede modificar sus recordatorios.
 
 Al salir, se retiran los avisos de ese dispositivo y se recupera el curso de invitado. Los cursos de cuenta tienen una copia local separada. Si hay cambios pendientes se requiere resolverlos antes de salir y se ofrece una descarga de seguridad. Vaciar o importar un curso con cuenta avisa expresamente de que el cambio se sincronizará en los otros dispositivos.
+
+Eliminar la cuenta es distinto de cerrar sesión. La app permite descargar una copia y exige escribir `ELIMINAR`. Después de confirmar el borrado del servidor, cancela la suscripción Push del navegador, vacía `localStorage` y `sessionStorage` y se reinicia como una instalación nueva. La PWA y su caché pública se mantienen. Las copias locales de otros dispositivos no pueden retirarse a distancia, aunque todas sus sesiones quedan invalidadas.
 
 ## Retirada de GitHub Pages y copias
 
@@ -64,7 +67,7 @@ En iPhone/iPad se requiere iOS/iPadOS 16.4 o posterior y abrir la app añadida a
 7. Comprobar Google y correo en dos navegadores, sesiones, conflictos, traslado de datos y cambios sin conexión. Instalar en un móvil, activar avisos, enviar una prueba, cerrar la app y verificar una entrega programada.
 8. Mantener Cloudflare como única web publicada y GitHub Pages desactivado con la rama None. El código y su historial se conservan en el repositorio salvatucurso.
 
-Los recursos públicos se construyen con una lista cerrada (index, privacidad, manifest, service worker, src y assets). Las claves privadas, .dev.vars, la base local, node_modules y los archivos del servidor no se incluyen en dist. Las API privadas quedan fuera de la caché de la PWA; tampoco se conservan parámetros de recuperación en las claves de navegación.
+Los recursos públicos se construyen con una lista cerrada (index, privacidad, manifest, service worker, src y assets). Las claves privadas, .dev.vars, la base local, node_modules y los archivos del servidor no se incluyen en dist. Las API privadas quedan fuera de la caché de la PWA; tampoco se conservan parámetros de recuperación en las claves de navegación. La caché actual es `salvatucurso-v48`, con `account.js?v=45`, `reminders.js?v=44` y `styles.css?v=44`.
 
 ## Pruebas verificadas y pendientes
 
@@ -81,6 +84,8 @@ El acceso real con Google volvió a la app y mostró «Curso sincronizado». La 
 El usuario confirmó la recepción de «Enviar prueba» en el móvil. Después autorizó una prueba programada y cerró la app. Se añadió un único aviso temporal a la cola del dispositivo ya registrado, sin cambiar tareas, asignaturas, faltas ni curso. El cron lo envió en el primer intento y el usuario confirmó que llegó con SalvaTuCurso cerrada. Se retiró solo ese aviso temporal después de la comprobación; el dispositivo sigue asociado a la cuenta.
 
 **Pendiente:** comprobar con el usuario que los mismos contenidos del curso aparecen en móvil y ordenador. No hay traslado pendiente desde la versión antigua, que estaba vacía. Google ya está publicado para usuarios externos. El correo queda aplazado por decisión del usuario. La prueba real confirma el transporte y la ejecución del cron; no garantiza que el sistema del móvil entregue siempre todos los avisos sin retrasos.
+
+La eliminación de cuenta pasó las pruebas locales completas con una cuenta descartable simulada, incluida la reversión de un fallo intermedio. Se publicó en la versión `76d4f742-eff4-4326-9f2b-a7fe15070611`; las comprobaciones remotas sin sesión devolvieron 401 y otro origen 403. No se eliminó ninguna cuenta real durante la verificación.
 
 ## Fuentes
 

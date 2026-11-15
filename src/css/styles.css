@@ -1737,6 +1737,18 @@ body.has-undo .toast { bottom: calc(6rem + var(--safe-bottom)); }
 .account-settings [hidden], #dialog-account [hidden] { display: none; }
 .account-backups { margin-top: 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
 .account-backups summary { min-height: 44px; cursor: pointer; font-weight: 600; }
+.account-delete-zone { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--red-border); }
+.account-delete-zone > div { min-width: 0; }
+.account-delete-zone .hint { margin: .25rem 0 0; max-width: 62ch; }
+.account-delete-zone .btn { flex: 0 0 auto; }
+.account-delete-list { margin: .75rem 0 1rem; padding-inline-start: 1.25rem; }
+.account-delete-list li + li { margin-top: .4rem; }
+.account-delete-form { margin-top: 1.25rem; }
+#account-delete-status:empty { display: none; }
+@media (max-width: 560px) {
+  .account-delete-zone { align-items: stretch; flex-direction: column; }
+  .account-delete-zone .btn, #account-delete-export { width: 100%; }
+}
 #auth-form { display: grid; gap: 1rem; margin-top: 1.25rem; }
 #auth-status:empty { display: none; }
 .auth-options { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; margin-top: 1rem; }

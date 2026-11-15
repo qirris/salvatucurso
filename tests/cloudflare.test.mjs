@@ -119,8 +119,47 @@ try {
   assert.equal((await call('/api/course', 'GET', undefined, a.cookie)).status, 401, 'restablecer contraseña retira sesiones anteriores');
   const storedPassword = db.sqlite.prepare("SELECT password FROM account WHERE providerId='credential' LIMIT 1").get().password;
   assert.notEqual(storedPassword, a.password); assert.notEqual(storedPassword, 'Nueva-clave-local-12345');
+
+  db.sqlite.prepare('DELETE FROM "rateLimit"').run();
+  const disposable = await register('cuenta-borrable');
+  const disposableUser = db.sqlite.prepare('SELECT id FROM "user" WHERE email=?').get(disposable.email);
+  assert.equal((await call('/api/account', 'DELETE', { confirmation: 'ELIMINAR' })).status, 401, 'sin sesión no se puede eliminar una cuenta');
+  assert.equal((await call('/api/account', 'DELETE', { confirmation: 'ELIMINAR' }, disposable.cookie, 'https://evil.test')).status, 403, 'otro origen no puede eliminarla');
+  assert.equal((await call('/api/account', 'DELETE', { confirmation: 'eliminar' }, disposable.cookie)).status, 400, 'la confirmación debe ser exacta');
+  assert.equal((await call('/api/account', 'DELETE', null, disposable.cookie)).status, 400, 'un cuerpo inválido se rechaza sin tocar la cuenta');
+  result = await call('/api/course', 'PUT', { revision: null, state: course }, disposable.cookie);
+  assert.equal(result.status, 200);
+  const disposableDevice = crypto.randomUUID();
+  result = await call('/api/push', 'POST', { action: 'sync', deviceId: disposableDevice, subscription, prefs: { examDays: 3, taskDays: 1, time: '18:00' }, timeZone: 'Europe/Madrid' }, disposable.cookie);
+  assert.equal(result.status, 200);
+  db.sqlite.prepare('INSERT INTO "account" (id,accountId,providerId,userId,createdAt,updatedAt) VALUES(?,?,?,?,?,?)').run('google-delete', 'google-account', 'google', disposableUser.id, new Date().toISOString(), new Date().toISOString());
+  db.sqlite.prepare('INSERT INTO "verification" (id,identifier,value,expiresAt,createdAt,updatedAt) VALUES(?,?,?,?,?,?)').run('verification-delete', disposable.email, 'temporal', new Date(Date.now() + 60000).toISOString(), new Date().toISOString(), new Date().toISOString());
+  db.sqlite.prepare('INSERT INTO "verification" (id,identifier,value,expiresAt,createdAt,updatedAt) VALUES(?,?,?,?,?,?)').run('reset-delete', 'reset-password:token-descartable', disposableUser.id, new Date(Date.now() + 60000).toISOString(), new Date().toISOString(), new Date().toISOString());
+  db.sqlite.prepare('INSERT INTO "rateLimit" (id,"key","count","lastRequest") VALUES(?,?,?,?)').run('limit-delete', 'curso:' + disposableUser.id + ':anterior', 1, Date.now());
+  const footprint = () => ({
+    users: db.sqlite.prepare('SELECT count(*) AS n FROM "user" WHERE id=?').get(disposableUser.id).n,
+    sessions: db.sqlite.prepare('SELECT count(*) AS n FROM "session" WHERE "userId"=?').get(disposableUser.id).n,
+    accounts: db.sqlite.prepare('SELECT count(*) AS n FROM "account" WHERE "userId"=?').get(disposableUser.id).n,
+    courses: db.sqlite.prepare('SELECT count(*) AS n FROM courses WHERE user_id=?').get(disposableUser.id).n,
+    backups: db.sqlite.prepare('SELECT count(*) AS n FROM course_backups WHERE user_id=?').get(disposableUser.id).n,
+    devices: db.sqlite.prepare('SELECT count(*) AS n FROM push_devices WHERE user_id=?').get(disposableUser.id).n,
+    jobs: db.sqlite.prepare('SELECT count(*) AS n FROM push_jobs WHERE device_id=?').get(disposableDevice).n,
+    verifications: db.sqlite.prepare('SELECT count(*) AS n FROM "verification" WHERE identifier=? OR value=?').get(disposable.email, disposableUser.id).n
+  });
+  const beforeDeleteFailure = footprint();
+  assert.ok(beforeDeleteFailure.sessions && beforeDeleteFailure.accounts >= 2 && beforeDeleteFailure.courses && beforeDeleteFailure.backups && beforeDeleteFailure.devices && beforeDeleteFailure.jobs && beforeDeleteFailure.verifications, 'la cuenta descartable contiene todos los datos que se van a retirar');
+  db.failSQL = 'DELETE FROM "user"';
+  result = await call('/api/account', 'DELETE', { confirmation: 'ELIMINAR' }, disposable.cookie);
+  assert.equal(result.status, 503); assert.deepEqual(footprint(), beforeDeleteFailure, 'un fallo intermedio revierte toda la eliminación');
+  const deleted = await call('/api/account', 'DELETE', { confirmation: 'ELIMINAR' }, disposable.cookie);
+  assert.equal(deleted.status, 200); assert.equal(deleted.headers.get('Clear-Site-Data'), '"cookies"');
+  assert.deepEqual(footprint(), { users: 0, sessions: 0, accounts: 0, courses: 0, backups: 0, devices: 0, jobs: 0, verifications: 0 }, 'elimina usuario, sesiones, conexiones, curso, copias, dispositivos, avisos y verificaciones');
+  assert.equal(db.sqlite.prepare('SELECT count(*) AS n FROM "rateLimit" WHERE "key" LIKE ?').get('curso:' + disposableUser.id + ':%').n, 0, 'retira los límites asociados');
+  assert.equal((await call('/api/course', 'GET', undefined, disposable.cookie)).status, 401, 'todas sus sesiones quedan invalidadas');
+  assert.equal(db.sqlite.prepare('SELECT count(*) AS n FROM "user" WHERE email=?').get(b.email).n, 1, 'las demás cuentas continúan funcionando');
+
   const london = inZone('2026-03-30', '18:00', 'Europe/London'); assert.equal(new Date(london).toISOString(), '2026-03-30T17:00:00.000Z');
   const madrid = inZone('2026-10-26', '18:00', 'Europe/Madrid'); assert.equal(new Date(madrid).toISOString(), '2026-10-26T17:00:00.000Z');
   assert.equal(jobsForCourse({ ...course, tareas: [{ ...course.tareas[0], estado: 'completada' }] }, { examDays: 3, taskDays: 1, time: '18:00' }, 'Europe/Madrid').length, 0);
-  console.log('OK: registro, verificación, contraseña, aislamiento de cuentas, sincronización concurrente, guardado atómico, planificación y cancelación de avisos en Cloudflare');
+  console.log('OK: autenticación, aislamiento, sincronización, avisos y eliminación atómica completa de una cuenta descartable en Cloudflare');
 } finally { db.sqlite.close(); }

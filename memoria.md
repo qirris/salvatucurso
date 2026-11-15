@@ -194,4 +194,13 @@ Para mantener una identidad profesional y seria, los mensajes de commit futuros 
 - Google Auth Platform se cambió de «Prueba» a «En producción» para usuarios externos. El propio panel confirmó que la app queda disponible para cualquier cuenta de Google y que solo se requeriría verificación con logotipo, más de diez dominios o permisos sensibles/restringidos; esta configuración no añade ninguno de esos elementos.
 - Pendiente: comprobar con el usuario que un curso real sincronizado muestra los mismos contenidos en móvil y ordenador. Correo/contraseña continúa desactivado para conservar el plan gratuito.
 
+## 14. Eliminación completa de cuenta y pendientes reales
+
+- Añadida «Eliminar mi cuenta» en Ajustes solo para sesiones autenticadas. El diálogo enumera el alcance, permite descargar una copia JSON, exige escribir `ELIMINAR` y bloquea envíos repetidos. Cancelar, cerrar o Escape no modifican datos y el foco vuelve al botón de origen.
+- `DELETE /api/account` exige sesión verificada, mismo origen, límite de solicitudes y confirmación literal. Una transacción D1 elimina avisos, dispositivos, cinco copias, curso, sesiones, conexiones de acceso —incluida Google—, verificaciones, límites asociados y usuario. Un fallo revierte el lote completo.
+- Tras el éxito se invalidan todas las sesiones, se solicita al navegador retirar sus cookies, se cancela la suscripción Push local, se vacían `localStorage` y `sessionStorage` y se recarga la app sin datos. La PWA y su caché pública permanecen instaladas. Las copias locales de otros dispositivos no se pueden borrar a distancia, aunque sus sesiones dejan de funcionar.
+- Política de privacidad, README, documentación de Cloudflare y `instrucciones/TAREAS_PENDIENTES.md` actualizados. Las tareas reales son comprobar el mismo curso en móvil y ordenador, probar instalación/offline en dispositivos físicos, revisar el icono maskable y realizar comprobaciones manuales de importación, migración y operaciones habituales.
+- Caché actual `salvatucurso-v48`; `account.js?v=45`, `reminders.js?v=44` y `styles.css?v=44`. Las pruebas usan una cuenta local descartable simulada y no eliminan la cuenta principal de producción.
+- Suite completa y compilación superadas. Publicado en Cloudflare con versión `76d4f742-eff4-4326-9f2b-a7fe15070611`. La comprobación pública confirmó web 200, política actualizada, caché v48, rechazo 401 sin sesión y 403 desde otro origen. No se ejecutó una eliminación autenticada en producción.
+
 

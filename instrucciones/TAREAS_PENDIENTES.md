@@ -1,48 +1,28 @@
-# Tareas Pendientes
+# Tareas pendientes de SalvaTuCurso
 
-## Verificación
-- [x] Probar la app en un servidor local (`python -m http.server 8080`): todos los recursos responden 200.
-- [ ] Comprobar instalación PWA en Chrome/Edge (Application → Manifest y Service Worker).
-- [ ] Probar funcionamiento offline tras la primera carga.
-- [ ] Revisar diseño en móvil real (sin scroll horizontal, botones táctiles).
-- [ ] Probar instalación en Android (Chrome) y en iPhone (Safari).
+Estado actualizado el 15/11/2026. Repositorio: <https://github.com/qirris/salvatucurso>. La única web publicada es <https://salvatucurso.qirris.workers.dev>; GitHub Pages permanece desactivado.
 
-## Funcionalidad
-- [ ] Revisar que añadir/editar/archivar/eliminar asignaturas actualiza el dashboard.
-- [ ] Revisar que registrar/eliminar faltas actualiza cálculos e historial.
-- [ ] Probar exportación e importación de JSON.
-- [ ] Verificar que la migración desde `asistenciaData` conserva los datos antiguos.
+## Completado
 
-## Mejoras opcionales
-- [ ] Empaquetar Tesseract.js y modelos de idioma localmente para OCR offline.
-- [x] Añadir filtro por rango de fechas en el historial.
-- [ ] Añadir resumen de absentismo (25 h injustificadas/mes) como indicador separado, claramente diferenciado de la evaluación continua.
-- [ ] Añadir icono maskable específico con mayor zona de seguridad.
+- [x] Publicación HTTPS en Cloudflare Workers con D1 en la Unión Europea.
+- [x] Acceso opcional con Google en producción y uso completo sin cuenta.
+- [x] Sincronización del curso con control de versiones y copias locales separadas.
+- [x] Copias JSON de descarga e importación.
+- [x] Avisos Push programados, incluida una recepción real con la app cerrada.
+- [x] Política de privacidad pública y eliminación definitiva de la cuenta desde Ajustes.
+- [x] GitHub Pages retirado y repositorio renombrado a `qirris/salvatucurso`.
 
-## Repositorio
-- [x] Repositorio privado `qirris/mi-asistencia` creado y sincronizado en `main`.
-- [ ] Publicar en HTTPS para probar la instalación PWA (opcional).
+## Comprobaciones reales pendientes
 
-## Futuro (Trabajo futuro planificado — NO implementar todavía)
+- [ ] Confirmar que un mismo curso muestra los mismos contenidos en un móvil y un ordenador con la misma cuenta de Google.
+- [ ] Probar la instalación PWA y el modo sin conexión en dispositivos reales: Android/Chrome, iPhone/Safari y Chrome o Edge de escritorio.
+- [ ] Revisar el icono maskable en las pantallas de inicio de Android y otros lanzadores, incluida su zona de seguridad.
+- [ ] Comprobar manualmente la descarga e importación JSON entre navegadores y entre versiones.
+- [ ] Verificar con datos de prueba la migración desde `asistenciaData` y formatos anteriores.
+- [ ] Recorrer las operaciones habituales: añadir, editar, archivar y eliminar asignaturas; registrar, editar y deshacer faltas; crear y completar tareas; cambiar clases y periodos no lectivos.
 
-### 1. Sistema de cuentas opcional (Prioridad: futura)
-- [ ] Permitir utilizar Mi Asistencia sin registrarse (Modo local en `localStorage`).
-- [ ] Permitir crear una cuenta voluntariamente de forma opcional.
-- [ ] Permitir a los usuarios registrados acceder a sus datos desde diferentes dispositivos (Modo con cuenta).
-- [ ] Explicar claramente en la interfaz las diferencias entre ambos modos.
+## Decisiones vigentes
 
-### 2. Copias de seguridad avanzadas (Prioridad: futura)
-- [ ] Exportar los datos personales a un archivo.
-- [ ] Importar una copia de seguridad recuperando asignaturas, horarios, faltas y configuración.
-- [ ] Comprobar compatibilidad de copias entre versiones y avisar antes de sobrescribir información.
-
-### 3. Sincronización entre dispositivos (Prioridad: futura)
-- [ ] Sincronización segura de datos para usuarios registrados entre ordenador, tablet y móvil sin alterar el modo local.
-
-### 4. Privacidad y protección de datos (Prioridad: futura)
-- [ ] Minimizar datos personales solicitados y proteger credenciales con autenticación segura.
-- [ ] Permitir eliminar una cuenta y sus datos asociados.
-- [ ] Documentar información almacenada y evaluar obligaciones de protección de datos aplicables.
-
-### 5. Arquitectura prevista (Futura)
-- [ ] Conservar doble modalidad (aplicación local sin registro y aplicación con cuenta opcional y sincronización) sin obligar a abandonar el modo local ni depender permanentemente de Internet.
+- El registro con correo y contraseña sigue aplazado para mantener el servicio gratuito; Google es el único acceso remoto.
+- Cloudflare es la única publicación. No reactivar GitHub Pages.
+- No activar facturación, dominio propio ni servicios de correo sin una autorización nueva y expresa.

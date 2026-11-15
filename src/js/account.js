@@ -2,7 +2,7 @@
 const CourseAccount = (() => {
   const META = 'salvatucursoCuenta', GUEST = 'salvatucursoInvitado';
   let user = null, meta = null, remote = null, suppress = false, busy = false, pending = false;
-  let status = '', timer = null, pollTimer = null, request = null, formMode = 'login', resetToken = '', draft = false, bound = false, initialization = null, authenticated = false;
+  let status = '', timer = null, pollTimer = null, request = null, formMode = 'login', resetToken = '', draft = false, bound = false, initialization = null, authenticated = false, deleting = false, deleteTrigger = null;
   try { meta = JSON.parse(localStorage.getItem(META)); user = meta?.user || null; } catch (error) { /* Sin cuenta local. */ }
   const config = () => window.SalvaTuCursoPushConfig || {};
   const configured = () => config().enabled === true && config().apiBase === '/api';
@@ -26,6 +26,7 @@ const CourseAccount = (() => {
     $('#account-person').textContent = user ? user.email : 'Comparte tu curso entre el móvil y el ordenador.';
     $('#account-status').textContent = status || (!configured() ? 'El acceso y la sincronización en Cloudflare aún no están conectados.' : user ? 'Cuenta conectada.' : 'Inicia sesión para guardar una copia de tu curso en Cloudflare.');
     $('#account-login').hidden = !!user && authenticated; $('#account-logout').hidden = !user; $('#account-sync').hidden = !user;
+    $('#account-delete-panel').hidden = !(user && authenticated);
     $('#account-login').disabled = busy || !configured() || (!config().google && !config().email);
     $('#account-logout').disabled = busy; $('#account-sync').disabled = busy;
     $('#account-sync').textContent = pending ? 'Revisar sincronización' : 'Sincronizar ahora';
@@ -37,7 +38,7 @@ const CourseAccount = (() => {
       const response = await fetch('/api/' + path, { method, credentials: 'same-origin', cache: 'no-store', signal: controller.signal,
         headers: body === undefined ? {} : { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
       const data = await response.json();
-      if (!response.ok) { const error = new Error(response.status === 429 ? 'Espera un minuto y vuelve a intentarlo.' : response.status === 401 ? 'Vuelve a iniciar sesión para sincronizar.' : 'No se ha podido completar. Revisa los datos y tu conexión.'); error.status = response.status; error.code = data.code; throw error; }
+      if (!response.ok) { const error = new Error(response.status === 429 ? 'Espera un minuto y vuelve a intentarlo.' : response.status === 401 ? 'Vuelve a iniciar sesión para sincronizar.' : data.error || 'No se ha podido completar. Revisa los datos y tu conexión.'); error.status = response.status; error.code = data.code; throw error; }
       return data;
     } finally { clearTimeout(timeout); }
   }
@@ -203,6 +204,42 @@ const CourseAccount = (() => {
     } catch (error) { status = error.message; }
     finally { suppress = false; busy = false; renderSettings(); }
   }
+  function resetDeleteDialog() {
+    $('#account-delete-confirmation').value = '';
+    $('#account-delete-submit').disabled = true;
+    $('#account-delete-status').textContent = '';
+  }
+  function openDeleteAccount(event) {
+    if (!authenticated || !user || deleting) return;
+    deleteTrigger = event?.currentTarget || $('#account-delete-open');
+    resetDeleteDialog();
+    const dialog = $('#dialog-delete-account');
+    if (!dialog.open) dialog.showModal();
+    $('#account-delete-confirmation').focus();
+  }
+  function closeDeleteAccount() {
+    if (!deleting) $('#dialog-delete-account').close();
+  }
+  async function submitDeleteAccount(event) {
+    event.preventDefault();
+    if (deleting || !authenticated || !user || $('#account-delete-confirmation').value !== 'ELIMINAR') return;
+    deleting = true; busy = true;
+    $('#account-delete-submit').disabled = true; $('#account-delete-cancel').disabled = true; $('#account-delete-close').disabled = true;
+    $('#account-delete-export').disabled = true; $('#account-delete-status').textContent = 'Eliminando la cuenta y sus datos…';
+    try {
+      await api('account', { confirmation: 'ELIMINAR' }, 'DELETE');
+      clearTimeout(timer); clearTimeout(pollTimer); timer = null; pollTimer = null;
+      if (typeof TaskReminders !== 'undefined') await TaskReminders.cleanupAfterAccountDeletion?.();
+      localStorage.clear(); sessionStorage.clear();
+      location.replace(location.origin + location.pathname);
+    } catch (error) {
+      $('#account-delete-status').textContent = error.message + ' No se ha borrado nada de este dispositivo.';
+      deleting = false; busy = false;
+      $('#account-delete-cancel').disabled = false; $('#account-delete-close').disabled = false; $('#account-delete-export').disabled = false;
+      $('#account-delete-submit').disabled = $('#account-delete-confirmation').value !== 'ELIMINAR';
+      renderSettings();
+    }
+  }
   async function chooseVersion(useCloud) {
     if (busy || !remote) return;
     busy = true; $('#sync-use-local').disabled = true; $('#sync-use-cloud').disabled = true;
@@ -237,7 +274,14 @@ const CourseAccount = (() => {
     $('#account-export').addEventListener('click', exportJSON);
     $('#account-import').addEventListener('click', () => $('#import-file').click());
     $('#import-file').addEventListener('change', event => { if (event.target.files[0]) importJSON(event.target.files[0]); event.target.value = ''; });
-    document.addEventListener('input', event => { if (event.target.closest('main,dialog') && !event.target.closest('#dialog-account,#dialog-sync')) draft = true; });
+    $('#account-delete-open').addEventListener('click', openDeleteAccount);
+    $('#account-delete-export').addEventListener('click', exportJSON);
+    $('#account-delete-form').addEventListener('submit', submitDeleteAccount);
+    $('#account-delete-confirmation').addEventListener('input', () => { $('#account-delete-submit').disabled = deleting || $('#account-delete-confirmation').value !== 'ELIMINAR'; $('#account-delete-status').textContent = ''; });
+    ['#account-delete-close', '#account-delete-cancel'].forEach(selector => $(selector).addEventListener('click', closeDeleteAccount));
+    $('#dialog-delete-account').addEventListener('cancel', event => { if (deleting) event.preventDefault(); });
+    $('#dialog-delete-account').addEventListener('close', () => { resetDeleteDialog(); deleteTrigger?.focus(); deleteTrigger = null; });
+    document.addEventListener('input', event => { if (event.target.closest('main,dialog') && !event.target.closest('#dialog-account,#dialog-sync,#dialog-delete-account')) draft = true; });
     window.addEventListener('online', () => { if (configured()) refreshSession(); });
     document.addEventListener('visibilitychange', () => { if (!document.hidden && configured()) refreshSession(); poll(); });
     const params = new URLSearchParams(location.search);
