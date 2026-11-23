@@ -200,7 +200,16 @@ Para mantener una identidad profesional y seria, los mensajes de commit futuros 
 - `DELETE /api/account` exige sesión verificada, mismo origen, límite de solicitudes y confirmación literal. Una transacción D1 elimina avisos, dispositivos, cinco copias, curso, sesiones, conexiones de acceso —incluida Google—, verificaciones, límites asociados y usuario. Un fallo revierte el lote completo.
 - Tras el éxito se invalidan todas las sesiones, se solicita al navegador retirar sus cookies, se cancela la suscripción Push local, se vacían `localStorage` y `sessionStorage` y se recarga la app sin datos. La PWA y su caché pública permanecen instaladas. Las copias locales de otros dispositivos no se pueden borrar a distancia, aunque sus sesiones dejan de funcionar.
 - Política de privacidad, README, documentación de Cloudflare y `instrucciones/TAREAS_PENDIENTES.md` actualizados. Las tareas reales son comprobar el mismo curso en móvil y ordenador, probar instalación/offline en dispositivos físicos, revisar el icono maskable y realizar comprobaciones manuales de importación, migración y operaciones habituales.
-- Caché actual `salvatucurso-v48`; `account.js?v=45`, `reminders.js?v=44` y `styles.css?v=44`. Las pruebas usan una cuenta local descartable simulada y no eliminan la cuenta principal de producción.
+- En esa entrega se publicó la caché `salvatucurso-v48`, con `account.js?v=45`, `reminders.js?v=44` y `styles.css?v=44`. Las pruebas usan una cuenta local descartable simulada y no eliminan la cuenta principal de producción.
 - Suite completa y compilación superadas. Publicado en Cloudflare con versión `76d4f742-eff4-4326-9f2b-a7fe15070611`. La comprobación pública confirmó web 200, política actualizada, caché v48, rechazo 401 sin sesión y 403 desde otro origen. No se ejecutó una eliminación autenticada en producción.
+
+## 15. Colores del horario y actualizaciones controladas
+
+- El horario de escritorio y la vista móvil aplican el color pastel elegido para cada asignatura. Las clases usan superficie, borde, texto y un marcador circular derivados de los ocho tonos, con variantes específicas para claro y oscuro; el nombre sigue visible para no comunicar únicamente mediante color.
+- Corregida la regla móvil que anulaba los fondos de asignatura. Las filas conservan ahora el color, un contraste legible, un área táctil amplia y una edición visualmente integrada.
+- Añadido el aviso «Actualización disponible», con «Actualizar ahora» y «Más tarde». Una versión nueva del service worker queda esperando y solo toma el control cuando la persona lo solicita; después se recarga una vez. La primera instalación no muestra el aviso ni se producen recargas automáticas durante un formulario.
+- Caché actual `salvatucurso-v50`; `styles.css?v=46`, `schedule.js?v=44` y nuevo `update.js?v=1`. README actualizado con el comportamiento de las versiones nuevas.
+- Añadidas pruebas para los ocho colores y para detectar, aplazar y activar una actualización. Suite completa, compilación y `git diff --check` superados.
+- Publicado en Cloudflare con versión `dd58817c-ac33-42cb-bee7-dcc5a40a6236`. Wrangler confirmó la subida de los recursos nuevos y el despliegue del Worker. No se modificaron D1, cuentas, credenciales, datos académicos, cron ni servicios de pago.
 
 

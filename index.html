@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
   <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
-  <link rel="stylesheet" href="src/css/styles.css?v=44">
+  <link rel="stylesheet" href="src/css/styles.css?v=46">
 </head>
 <body>
   <div class="app-shell">
@@ -1048,22 +1048,31 @@
     <button class="btn btn-secondary" id="btn-undo-delete" type="button">Deshacer</button>
   </div>
 
+  <aside class="update-notice" id="update-notice" hidden aria-labelledby="update-title" aria-describedby="update-description">
+    <div class="update-notice-icon" aria-hidden="true">
+      <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M20 11a8 8 0 1 0-2.34 5.66"/>
+        <path d="M20 4v7h-7"/>
+      </svg>
+    </div>
+    <div class="update-notice-copy" role="status" aria-live="polite" aria-atomic="true">
+      <strong id="update-title">Actualización disponible</strong>
+      <span id="update-description">Hay una versión nueva de SalvaTuCurso preparada.</span>
+    </div>
+    <div class="update-notice-actions">
+      <button class="btn btn-ghost btn-sm" id="btn-update-later" type="button">Más tarde</button>
+      <button class="btn btn-sm" id="btn-update-now" type="button">Actualizar ahora</button>
+    </div>
+  </aside>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./service-worker.js').catch(function (e) {
-          console.warn('Service worker no registrado:', e);
-        });
-      });
-    }
-  </script>
+  <script src="src/js/update.js?v=1"></script>
   <script src="src/js/attendance.js?v=43"></script>
   <script src="src/js/calendar.js?v=43"></script>
   <script src="src/js/absence-day.js?v=43"></script>
   <script src="src/js/storage.js?v=43"></script>
-  <script src="src/js/schedule.js?v=43"></script>
+  <script src="src/js/schedule.js?v=44"></script>
   <script src="src/js/tasks.js?v=43"></script>
   <script src="src/js/history.js?v=43"></script>
   <script src="src/js/recovery.js?v=43"></script>

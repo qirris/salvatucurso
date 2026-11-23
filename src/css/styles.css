@@ -863,7 +863,6 @@ dialog::backdrop { background: var(--backdrop); backdrop-filter: blur(4px); }
   align-items: center;
   gap: 0.85rem;
   border: 1px solid var(--border);
-  border-left: 6px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
   padding: 0.85rem 1rem;
@@ -1286,7 +1285,7 @@ input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px var(--primary-
     gap: .2rem;
     padding: .4rem .15rem;
     min-height: 54px;
-    font-size: .68rem;
+    font-size: .7rem;
     line-height: 1.15;
     white-space: nowrap;
   }
@@ -1364,7 +1363,7 @@ input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px var(--primary-
     gap: .16rem;
     background: transparent;
     color: var(--muted);
-    font-size: .66rem;
+    font-size: .7rem;
     font-weight: 600;
     line-height: 1.1;
     white-space: nowrap;
@@ -1758,3 +1757,151 @@ body.has-undo .toast { bottom: calc(6rem + var(--safe-bottom)); }
 .sync-comparison dd { margin: 0; color: var(--muted); overflow-wrap: anywhere; }
 .sync-actions { flex-wrap: wrap; }
 .sync-actions .btn { flex: 1 1 100%; white-space: normal; }
+
+/* El color elegido para cada asignatura acompaña todas sus clases. */
+.sg-cell.sc-azul,
+.sg-cell.sc-verde,
+.sg-cell.sc-morado,
+.sg-cell.sc-naranja,
+.sg-cell.sc-rosa,
+.sg-cell.sc-turquesa,
+.sg-cell.sc-amarillo,
+.sg-cell.sc-gris {
+  background: var(--sc-bg);
+  border-color: var(--sc-border);
+  color: var(--sc-text);
+  box-shadow: none;
+}
+.sg-cell.sc-azul:hover,
+.sg-cell.sc-verde:hover,
+.sg-cell.sc-morado:hover,
+.sg-cell.sc-naranja:hover,
+.sg-cell.sc-rosa:hover,
+.sg-cell.sc-turquesa:hover,
+.sg-cell.sc-amarillo:hover,
+.sg-cell.sc-gris:hover {
+  border-color: var(--sc-dot);
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--sc-dot) 16%, transparent);
+}
+.sg-color,
+.mc-color {
+  width: .62rem;
+  height: .62rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--sc-dot);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sc-dot) 16%, transparent);
+}
+.sg-color { margin-bottom: .35rem; }
+
+.schedule-mobile .mobile-day-list { gap: .55rem; }
+.schedule-mobile .mobile-class {
+  min-height: 64px;
+  margin: 0;
+  padding: .72rem .75rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+.schedule-mobile .mobile-class.sc-azul,
+.schedule-mobile .mobile-class.sc-verde,
+.schedule-mobile .mobile-class.sc-morado,
+.schedule-mobile .mobile-class.sc-naranja,
+.schedule-mobile .mobile-class.sc-rosa,
+.schedule-mobile .mobile-class.sc-turquesa,
+.schedule-mobile .mobile-class.sc-amarillo,
+.schedule-mobile .mobile-class.sc-gris {
+  background: var(--sc-bg);
+  border-color: var(--sc-border);
+  border-style: solid;
+  color: var(--sc-text);
+}
+.schedule-mobile .mobile-class.sc-azul .mc-time,
+.schedule-mobile .mobile-class.sc-verde .mc-time,
+.schedule-mobile .mobile-class.sc-morado .mc-time,
+.schedule-mobile .mobile-class.sc-naranja .mc-time,
+.schedule-mobile .mobile-class.sc-rosa .mc-time,
+.schedule-mobile .mobile-class.sc-turquesa .mc-time,
+.schedule-mobile .mobile-class.sc-amarillo .mc-time,
+.schedule-mobile .mobile-class.sc-gris .mc-time {
+  color: var(--sc-text);
+  opacity: .78;
+}
+.schedule-mobile .mobile-class .mc-name { font-size: .9rem; font-weight: 650; }
+.schedule-mobile .mobile-class .mc-edit {
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  background: color-mix(in srgb, var(--card) 72%, transparent);
+  color: inherit;
+}
+.schedule-mobile .mobile-class.sg-empty {
+  background: var(--card);
+  border-style: dashed;
+}
+
+.cell-subject.sc-azul,
+.cell-subject.sc-verde,
+.cell-subject.sc-morado,
+.cell-subject.sc-naranja,
+.cell-subject.sc-rosa,
+.cell-subject.sc-turquesa,
+.cell-subject.sc-amarillo,
+.cell-subject.sc-gris {
+  background: var(--sc-bg);
+  border-color: var(--sc-border);
+  color: var(--sc-text);
+  outline: none;
+}
+.cell-subject.active { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+/* Actualizaciones: aviso visible, pero nunca una recarga inesperada. */
+.update-notice {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 70;
+  width: min(560px, calc(100vw - 2rem));
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .8rem;
+  padding: .85rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 14px 34px rgba(10, 32, 50, .18);
+  animation: update-notice-in .3s cubic-bezier(.16, 1, .3, 1) both;
+}
+.update-notice[hidden] { display: none; }
+.update-notice-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+.update-notice-copy { min-width: 0; }
+.update-notice-copy strong,
+.update-notice-copy span { display: block; overflow-wrap: anywhere; }
+.update-notice-copy strong { color: var(--primary); font-size: .92rem; }
+.update-notice-copy span { margin-top: .15rem; color: var(--muted); font-size: .8rem; }
+.update-notice-actions { display: flex; align-items: center; gap: .4rem; }
+.update-notice-actions .btn { white-space: nowrap; }
+@keyframes update-notice-in {
+  from { opacity: .3; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 899px) {
+  .update-notice { bottom: calc(4.75rem + var(--safe-bottom)); }
+}
+@media (max-width: 620px) {
+  .update-notice {
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .update-notice-actions { grid-column: 1 / -1; justify-content: flex-end; }
+}

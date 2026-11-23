@@ -453,7 +453,7 @@ function renderGrid() {
         const a = asignaturaPorId(c.asignaturaId);
         const count = countTareasPendientesSlot(key);
         if (a) {
-          html += `<button class="sg-cell sc-${a.color}" type="button" data-cell="${key}" aria-label="${label}: ${esc(a.nombre)}"><span class="sg-name">${esc(a.nombre)}</span>${count > 0 ? `<span class="badge red task-badge">${count}</span>` : ''}</button>`;
+          html += `<button class="sg-cell sc-${a.color}" type="button" data-cell="${key}" aria-label="${label}: ${esc(a.nombre)}"><span class="sg-color" aria-hidden="true"></span><span class="sg-name">${esc(a.nombre)}</span>${count > 0 ? `<span class="badge red task-badge">${count}</span>` : ''}</button>`;
         } else {
           html += `<button class="sg-cell sg-orphan" type="button" data-cell="${key}" aria-label="${label}: asignatura eliminada">Asignatura eliminada</button>`;
         }
@@ -517,6 +517,7 @@ function renderMobileHorario() {
       }
       html += `<div class="mobile-class ${cls}" role="button" tabindex="0" data-cell="${key}" aria-label="${diaLabel(day)} ${f.inicio}–${f.fin}: ${esc(nombre)}">
         <span class="mc-time">${f.inicio}–${f.fin}</span>
+        ${a ? '<span class="mc-color" aria-hidden="true"></span>' : ''}
         <span class="mc-name">${esc(nombre)}</span>
         <button class="mc-edit" type="button" data-editfranja="${f.id}" aria-label="Editar franja">${uiIcon('edit')}</button>
       </div>`;

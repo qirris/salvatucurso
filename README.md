@@ -51,6 +51,8 @@ Las capturas muestran un curso ficticio preparado para esta presentación. No co
 
 También puedes recuperar durante unos segundos tareas o faltas con **Deshacer**, descargar copias de seguridad e instalar la app para utilizarla sin conexión después de haberla abierto con internet.
 
+Cuando se publica una versión nueva, SalvaTuCurso muestra **Actualización disponible**. Puedes aplicarla con **Actualizar ahora** o dejarla para más tarde; la app nunca interrumpe lo que estás haciendo con una recarga automática.
+
 En móvil, la barra inferior da acceso a **Inicio, Mis tareas, Horario, Faltas y Más**. Dentro de **Más** están Asignaturas, Historial y Ajustes.
 
 ## Primeros pasos
