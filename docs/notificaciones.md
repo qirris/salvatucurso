@@ -67,7 +67,15 @@ En iPhone/iPad se requiere iOS/iPadOS 16.4 o posterior y abrir la app añadida a
 7. Comprobar Google y correo en dos navegadores, sesiones, conflictos, traslado de datos y cambios sin conexión. Instalar en un móvil, activar avisos, enviar una prueba, cerrar la app y verificar una entrega programada.
 8. Mantener Cloudflare como única web publicada y GitHub Pages desactivado con la rama None. El código y su historial se conservan en el repositorio salvatucurso.
 
-Los recursos públicos se construyen con una lista cerrada (index, privacidad, manifest, service worker, src y assets). Las claves privadas, .dev.vars, la base local, node_modules y los archivos del servidor no se incluyen en dist. Las API privadas quedan fuera de la caché de la PWA; tampoco se conservan parámetros de recuperación en las claves de navegación. La caché actual es `salvatucurso-v51`, con `account.js?v=45`, `reminders.js?v=44`, `schedule.js?v=45` y `styles.css?v=47`.
+Los recursos públicos se construyen con una lista cerrada (index, privacidad, manifest, service worker, src y assets). Las claves privadas, .dev.vars, la base local, node_modules y los archivos del servidor no se incluyen en dist. Las API privadas quedan fuera de la caché de la PWA; tampoco se conservan parámetros de recuperación en las claves de navegación. La caché actual es `salvatucurso-v52`, con `account.js?v=46`, `attendance-ui.js?v=1`, `styles.css?v=48` y los módulos de datos, cálculos, historial y recuperación actualizados.
+
+### Formato académico 3
+
+El curso usa la clave local `salvatucursoStateV3`. La primera apertura de un curso anterior ofrece descargar una copia antes de guardar la migración, conserva el almacenamiento anterior y mantiene los totales como estimados hasta su confirmación. Cada asignatura incorpora `computo: { origen, referencia, inicio }` y un `criterio` opcional que sustituye al general. Los criterios incluyen unidad, valor, operador, faltas computables, referencia, fecha de revisión y etapa; cada falta añade `procedencia` (centro, empresa o sin especificar). Son datos del curso y se sincronizan con él.
+
+`GET` y `PUT /api/course` requieren `X-SalvaTuCurso-Data-Version: 3`. Tras verificar la sesión, el servidor devuelve 426 con `update_required` a clientes antiguos; no permite leer ni sustituir el curso sin esta identificación. Se conservan el mismo endpoint, las revisiones y la transacción de curso/avisos. El formato 3 se valida antes de guardar, mientras que el cliente nuevo migra las respuestas antiguas de formato 2 sin cambiar los identificadores. No hay cambios de tablas ni migraciones D1 adicionales.
+
+Los metadatos de cuenta, copias locales de cursos de cuenta e invitado y el diario de Deshacer usan espacios de nombres propios de la versión 3 para evitar interferencias de pestañas antiguas. Resuelve una operación pendiente de Deshacer antes de actualizar. Las copias JSON de formatos anteriores siguen admitidas; las versiones futuras y los formatos 3 incompletos se rechazan. Mantener la protección de versión y no bajar el servidor a una edición que solo admita formato 2 después de haber sincronizado cursos nuevos.
 
 ## Pruebas verificadas y pendientes
 

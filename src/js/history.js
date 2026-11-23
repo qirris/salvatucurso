@@ -142,7 +142,7 @@ function openHistoryDayModal(dateStr) {
             <div class="history-item sc-${a ? a.color : 'gris'}">
               <div class="h-main">
                 <div><strong>${esc(a ? a.nombre : 'Asignatura eliminada')}</strong></div>
-                <div class="h-sub">${f.sesion ? absenceSessionText(f) + ' · ' : ''}${f.tipo === 'justificada' ? 'Justificada' : 'No justificada'}${f.motivo ? ' · ' + esc(f.motivo) : ''}</div>
+                <div class="h-sub">${f.procedencia === 'empresa' ? 'Empresa' : f.procedencia === 'centro' ? 'Centro' : 'Sin especificar'} · ${f.sesion ? absenceSessionText(f) + ' · ' : ''}${f.tipo === 'justificada' ? 'Justificada' : 'No justificada'}${f.motivo ? ' · ' + esc(f.motivo) : ''}</div>
               </div>
               <div style="display:flex;align-items:center;gap:.4rem">
                 <span class="h-hours">${formatAbsenceDuration(f.horas)}</span>

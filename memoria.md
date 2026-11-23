@@ -12,7 +12,7 @@ Web app responsive e instalable (PWA) para estudiantes de Andalucía que permite
 - Aplicación completada con rediseño visual moderno y profesional (estética inspirada en Notion, Linear y Apple).
 - Vistas principales: Dashboard (Inicio), Asignaturas, Faltas, Mi horario, Mis tareas, Historial y Ajustes.
 - PWA: manifest, service worker con caché del app shell, iconos 192/512 e instalación.
-- Datos locales en `localStorage` (clave `miAsistenciaState`) con migración segura y copias JSON; sincronización con Cloudflare al usar una cuenta.
+- Datos locales en `localStorage` (clave actual `salvatucursoStateV3`, con respaldo del formato anterior en `miAsistenciaState`) y copias JSON; sincronización con Cloudflare al usar una cuenta.
 - La única web publicada es https://salvatucurso.qirris.workers.dev. GitHub Pages está desactivado; el repositorio es qirris/salvatucurso.
 - Identidad SalvaTuCurso: símbolo de asistencia, birrete, lema «Tus faltas, horario y tareas» y paleta azul marino, coral y turquesa.
 - Tareas y horario muestran resúmenes compactos; los filtros de tareas se despliegan cuando se necesitan.
@@ -30,7 +30,7 @@ Web app responsive e instalable (PWA) para estudiantes de Andalucía que permite
 - Creación rápida de tareas con título, asignatura y fecha; tipo, prioridad, estado y notas en «Más opciones». La edición y el acceso a notas abren las opciones cuando corresponde, sin perder los campos plegados ni la vinculación con una clase.
 - La edición mantiene la asignatura archivada de una tarea existente. Se limpian los errores al abrir un formulario nuevo y el foco empieza en el título.
 
-- Recuperación con «Deshacer» durante diez segundos para tareas, notas y faltas; agrupa borrados consecutivos, pausa con foco/puntero/segundo plano y conserva un diario temporal local (`salvatucursoDeshacer`) para la recarga dentro del plazo.
+- Recuperación con «Deshacer» durante diez segundos para tareas, notas y faltas; agrupa borrados consecutivos, pausa con foco/puntero/segundo plano y conserva un diario temporal local (`salvatucursoDeshacerV3`) para la recarga dentro del plazo.
 - La recuperación inserta los registros originales, respeta cambios posteriores, evita duplicados y limpia vínculos con clases que hayan cambiado. Importar, borrar una asignatura y borrar todos los datos descartan el diario pendiente.
 - Se conectaron los botones de editar y eliminar faltas del historial y del detalle diario. Al eliminar desde un diálogo se cierra para que «Deshacer» quede accesible.
 - Copia de un día del horario a varios destinos mediante un diálogo con resumen y confirmación explícita de casillas ocupadas. Respeta las salidas distintas, omite asignaturas archivadas o huérfanas y mantiene las franjas y los recreos generales.
@@ -123,7 +123,7 @@ Para mantener una identidad profesional y seria, los mensajes de commit futuros 
 
 ## 8. Restricciones permanentes del proyecto
 - Cloudflare es la única web publicada; mantener GitHub Pages desactivado. El repositorio conserva el código y el historial.
-- Almacenamiento local en modo estático (`miAsistenciaState`); sincronización voluntaria con una cuenta de SalvaTuCurso en la versión de Cloudflare.
+- Almacenamiento local en modo estático (`salvatucursoStateV3`, con el formato anterior conservado); sincronización voluntaria con una cuenta de SalvaTuCurso en la versión de Cloudflare.
 - No guardar secretos en el repositorio ni dar por activa una función pendiente de configurar.
 
 ## 9. Ampliación preparada el 13/11/2026: cuentas, sincronización y avisos
@@ -217,7 +217,19 @@ Para mantener una identidad profesional y seria, los mensajes de commit futuros 
 - Añadidos rojo, coral, celeste, índigo, lima, menta, marrón y arena a los ocho tonos originales. Se conservan los identificadores y colores existentes.
 - Cada tono incluye nombre accesible y variables específicas en claro y oscuro. Los estilos compartidos aplican todos los colores a las clases de escritorio y móvil y al selector de clase; tareas y marcadores reutilizan las mismas variables.
 - Verificadas normalización de los 16 valores, etiquetas y contraste mediante las pruebas existentes ampliadas. Suite completa, compilación y simulación de despliegue superadas.
-- Caché actual `salvatucurso-v51`, con `styles.css?v=47` y `schedule.js?v=45`. La app ofrece el aviso de actualización pendiente.
+- En esa entrega se publicó la caché `salvatucurso-v51`, con `styles.css?v=47` y `schedule.js?v=45`. La app ofrece el aviso de actualización pendiente.
 - Publicado en Cloudflare con versión `62606de3-d651-4757-a18b-5782026a4643`. Commit en español: `funcionalidad: ampliar la paleta de asignaturas a 16 colores`.
+
+## 17. Revisión de horas y criterios de asistencia
+
+- Formato académico 3. Cada asignatura permite estimar horas semanales por semanas editables (30 como suposición inicial) o introducir un total confirmado por la persona. Las ediciones semanales no alteran el total confirmado; los totales migrados se conservan incluso si no coinciden con su multiplicación anterior.
+- Añadida revisión pendiente en Ajustes con contador rojo accesible en escritorio y Más/Ajustes en móvil, enlaces a edición y ayuda para localizar horas en programación/plataforma/tutoría. Los resultados estimados se identifican como orientativos; las horas futuras ya no se presentan como asistidas.
+- Criterio general del centro para la etapa actual y excepciones por asignatura: horas o porcentaje de curso completo, alcanzar/superar, faltas computables, documento y fecha de consulta. Sin documentación se conserva pendiente; trimestres/sesiones se remiten a revisión manual. FP cuenta todas las ausencias y mantiene separado el mínimo autonómico del criterio del centro; el 15 % se explica como precaución de la app.
+- Fecha opcional de inicio del cómputo FP: se conservan las faltas anteriores y se informa de su exclusión. Procedencia de las faltas (centro/empresa/sin especificar), con faltas por horario identificadas como centro. El total debe cubrir el periodo desde la matrícula y las horas de empresa que correspondan.
+- La migración ofrece copia anterior antes de guardar y utiliza `salvatucursoStateV3`, manteniendo intacta la clave anterior. Metadatos de cuenta, invitado y Deshacer separados por versión. Se rechazan formatos futuros/incompletos. `/api/course` exige cabecera de cliente 3 y devuelve 426 a ediciones antiguas. No hay cambios de tablas D1 ni claves.
+- Añadidas pruebas de estimaciones, confirmación independiente, umbrales, reglas documentadas y por etapa, matrícula, alerta, copia previa, fallos y formatos. Integración backend verifica el rechazo de clientes antiguos y de cursos incompletos. Prueba adicional en DOM con HTML real: arranque, alta, edición, criterio general, excepción, cancelación, falta de empresa y diálogo de migración. Se utilizó linkedom temporalmente sin modificar package.json ni package-lock.json.
+- La revisión visual en navegador quedó bloqueada: ventanas nativas minimizadas y navegador de pruebas sin acceso al servidor local. No se afirma verificación visual a los cuatro anchos ni prueba real de recarga offline en esta entrega. Los recursos están cubiertos por la prueba de precaché y contraste existente.
+- Caché actual `salvatucurso-v52`; `attendance-ui.js?v=1`, `attendance.js?v=44`, `storage.js?v=44`, `app.js?v=44`, `account.js?v=46`, `history.js?v=44`, `absence-day.js?v=44`, `recovery.js?v=44`, `styles.css?v=48`.
+- Suite completa, compilación, simulación del Worker y comprobación de diferencias superadas. Publicado en Cloudflare con versión `781586b7-ae9e-498a-b86a-9597777c9804`; la web pública devuelve 200 y entrega el formulario nuevo y el diálogo de migración. No se modificó ningún curso real para probarlo.
 
 

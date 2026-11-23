@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
   <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
-  <link rel="stylesheet" href="src/css/styles.css?v=47">
+  <link rel="stylesheet" href="src/css/styles.css?v=48">
 </head>
 <body>
   <div class="app-shell">
@@ -56,7 +56,7 @@
       </button>
       <button class="mobile-tab-button" id="mobile-more-button" type="button" aria-expanded="false" aria-controls="mobile-more-menu">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
-        <span>Más</span>
+        <span>Más <span class="settings-pending" id="settings-pending-more" hidden></span></span>
       </button>
     </nav>
 
@@ -148,8 +148,8 @@
           <div class="form-row">
             <div class="field">
               <label for="asig-horas">Horas que tienes cada semana</label>
-              <input type="number" id="asig-horas" min="0.5" max="20" step="0.5" placeholder="Ej: 4">
-              <span class="hint">Introduce cuántas horas tienes esta asignatura por semana.</span>
+              <input type="number" id="asig-horas" min="0.01" step="any" placeholder="Ej: 4">
+              <span class="hint">Necesarias para estimar. Puedes dejarlas vacías si introduces el total del centro.</span>
             </div>
             <div class="field">
               <label>Color identificativo</label>
@@ -159,6 +159,7 @@
             </div>
           </div>
 
+          <div class="attendance-fields" id="asig-computo"></div>
           <div class="subject-preview-card" id="asig-preview">
             <div class="sp-title">Vista previa en tiempo real</div>
             <div class="sp-content">
@@ -213,6 +214,7 @@
                 <input type="text" id="falta-motivo" placeholder="Ej: cita médica">
               </div>
             </div>
+            <div class="field"><label for="falta-procedencia">Lugar de la ausencia</label><select id="falta-procedencia"><option value="sin_especificar">Sin especificar</option><option value="centro">Centro educativo</option><option value="empresa">Formación en empresa</option></select></div>
             <button class="btn btn-block" id="btn-add-falta" type="button">Registrar falta</button>
           </div>
         </div>
@@ -442,7 +444,7 @@
       <!-- ===================== CONFIGURACIÓN ===================== -->
       <section class="view" id="view-config">
         <div class="view-header">
-          <h2>Ajustes</h2>
+          <h2>Ajustes <span class="settings-pending" id="settings-pending-mobile" hidden></span><span class="settings-pending" id="settings-pending-desktop" hidden></span></h2>
           <p>Personaliza SalvaTuCurso y configura tus preferencias.</p>
         </div>
 
@@ -462,25 +464,25 @@
             <span class="hint">Define las reglas base de evaluación continua aplicables a tu enseñanza.</span>
           </div>
 
-          <div id="cfg-criterio-wrap" style="border-top:1px solid var(--border);padding-top:1rem;">
-            <h3 class="section-title" style="margin-top:0">Criterio del centro (ESO / Bachillerato)</h3>
-            <div class="form-row">
-              <div class="field">
-                <label for="cfg-criterio-tipo">Tipo de criterio</label>
-                <select id="cfg-criterio-tipo">
-                  <option value="">Sin definir</option>
-                  <option value="porcentaje">% máximo de ausencia</option>
-                  <option value="horas">Horas máximas de ausencia</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="cfg-criterio-valor">Valor</label>
-                <input type="number" id="cfg-criterio-valor" min="0" step="0.1" placeholder="Ej: 15">
-              </div>
-            </div>
-            <p class="note warn">La normativa andaluza no fija un porcentaje único para ESO/Bachillerato. Introduce el criterio de tu Plan de Convivencia.</p>
-          </div>
           <p class="legal" id="cfg-legal" style="margin-top:.75rem"></p>
+        </div>
+
+        <div class="card attendance-settings" id="attendance-review-card">
+          <h3 class="section-title">Revisa tus datos de asistencia</h3>
+          <p id="attendance-review-count" role="status"></p>
+          <p class="hint">Puedes seguir registrando faltas con una estimación. Confirma las horas y consulta el criterio del centro para interpretar el resultado.</p>
+          <ul class="attendance-review-list" id="attendance-review-list"></ul>
+          <details class="attendance-help"><summary>¿Dónde encuentro las horas?</summary><p>En la programación didáctica, en la plataforma del curso o preguntando al profesorado o tutoría. Busca «duración total» o «carga horaria». En FP, comprueba el periodo desde tu matrícula y las horas de centro y empresa.</p></details>
+        </div>
+        <div class="card attendance-settings">
+          <h3 class="section-title">Criterio general del centro</h3>
+          <p class="hint">Para tu etapa actual. Puedes indicar excepciones al editar cada asignatura. Las reglas por trimestre o sesiones necesitan revisión manual.</p>
+          <form id="center-rule-form" novalidate>
+            <div id="center-rule-inputs"></div>
+            <p class="form-feedback" id="center-rule-status" role="status"></p>
+            <button class="btn" type="submit">Guardar criterio</button>
+          </form>
+          <p class="hint">En FP presencial se exige al menos el 80 % de asistencia. El aviso al llegar al 15 % de ausencias es preventivo y lo establece la app. Superar un umbral no equivale a suspender: corresponde al centro determinar y comunicar la pérdida de evaluación continua y las pruebas alternativas.</p>
         </div>
 
         <div class="card school-calendar" id="school-calendar-card" style="margin-bottom:1.25rem">
@@ -607,6 +609,9 @@
           <h3 class="section-title" style="margin-top:0">Referencias normativas</h3>
           <ul class="legal" style="padding-left:1.1rem;margin:0;line-height:1.8">
             <li><a href="https://www.juntadeandalucia.es/boja/2025/180/c01/1" target="_blank" rel="noopener">Orden de 18/09/2025 (FP)</a></li>
+            <li><a href="https://www.juntadeandalucia.es/educacion/portales/documents/270701/3483906/260323%20-%20FAQ.pdf/64850700-5e4c-ceec-293a-6082c0b5c63c?version=1.0" target="_blank" rel="noopener">Aclaraciones oficiales de FP: faltas justificadas y evaluación alternativa (23/03/2026)</a></li>
+            <li><a href="https://www.juntadeandalucia.es/boja/2023/104/36" target="_blank" rel="noopener">Orden de 30/05/2023 (ESO)</a></li>
+            <li><a href="https://www.juntadeandalucia.es/boja/2023/104/37" target="_blank" rel="noopener">Orden de 30/05/2023 (Bachillerato)</a></li>
             <li><a href="https://www.juntadeandalucia.es/boja/2025/217901/1" target="_blank" rel="noopener">Decreto 147/2025 (FP)</a></li>
             <li><a href="https://ws040.juntadeandalucia.es/sedeboja/lconsolidada/eli/es-an/d/2010/07/13/327/con/20260831/spa/html/LE0000422784_20260831.html" target="_blank" rel="noopener">Decreto 327/2010 (IES)</a></li>
             <li><a href="https://ws040.juntadeandalucia.es/sedeboja/lconsolidada/eli/es-an/o/2005/09/19/%281401437649%29/con/20060113/spa/html/LE0000219382_20060113.html" target="_blank" rel="noopener">Orden de 19/09/2005 (absentismo)</a></li>
@@ -717,13 +722,14 @@
         </div>
         <div class="field">
           <label for="dlg-horas">Horas que tienes cada semana</label>
-          <input type="number" id="dlg-horas" min="0.5" max="20" step="0.5">
+          <input type="number" id="dlg-horas" min="0.01" step="any">
         </div>
         <div class="field">
           <label>Color identificativo</label>
           <input type="hidden" id="dlg-color" value="azul">
           <div class="color-picker" id="dlg-color-picker" role="radiogroup" aria-label="Color de la asignatura"></div>
         </div>
+        <div class="attendance-fields" id="dlg-computo"></div>
         
       </div>
 </div>
@@ -766,10 +772,11 @@
             </select>
           </div>
           <div class="field">
-            <label for="dlg-falta-motivo">Motivo</label>
+          <label for="dlg-falta-motivo">Motivo</label>
             <input type="text" id="dlg-falta-motivo">
           </div>
         </div>
+        <div class="field"><label for="dlg-falta-procedencia">Lugar de la ausencia</label><select id="dlg-falta-procedencia"><option value="sin_especificar">Sin especificar</option><option value="centro">Centro educativo</option><option value="empresa">Formación en empresa</option></select></div>
         
       </div>
 </div>
@@ -1043,6 +1050,14 @@
 </div>
   </dialog>
 
+  <dialog id="dialog-data-migration" aria-labelledby="migration-title">
+    <div class="dialog-body">
+      <div class="dialog-head"><h3 id="migration-title">Revisa las horas de tu curso</h3></div>
+      <div class="dialog-content"><p>La nueva versión distingue las horas estimadas de las confirmadas. Se conservarán tus asignaturas, faltas, tareas y horario. Las horas actuales quedarán pendientes de confirmar y el curso anterior seguirá guardado como respaldo en este navegador.</p><p>Puedes descargar una copia antes de continuar.</p><p class="form-feedback" id="migration-status" role="alert"></p></div>
+      <div class="dialog-actions"><button class="btn btn-secondary" type="button" id="migration-download">Descargar copia anterior</button><button class="btn" type="button" id="migration-continue">Continuar</button></div>
+    </div>
+  </dialog>
+
   <div class="undo-notice" id="undo-notice" hidden>
     <span id="undo-message" role="status" aria-live="polite" aria-atomic="true"></span>
     <button class="btn btn-secondary" id="btn-undo-delete" type="button">Deshacer</button>
@@ -1068,18 +1083,19 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="src/js/update.js?v=1"></script>
-  <script src="src/js/attendance.js?v=43"></script>
+  <script src="src/js/attendance.js?v=44"></script>
+  <script src="src/js/attendance-ui.js?v=1"></script>
   <script src="src/js/calendar.js?v=43"></script>
-  <script src="src/js/absence-day.js?v=43"></script>
-  <script src="src/js/storage.js?v=43"></script>
+  <script src="src/js/absence-day.js?v=44"></script>
+  <script src="src/js/storage.js?v=44"></script>
   <script src="src/js/schedule.js?v=45"></script>
   <script src="src/js/tasks.js?v=43"></script>
-  <script src="src/js/history.js?v=43"></script>
-  <script src="src/js/recovery.js?v=43"></script>
+  <script src="src/js/history.js?v=44"></script>
+  <script src="src/js/recovery.js?v=44"></script>
   <script src="src/js/push-config.js?v=43"></script>
-  <script src="src/js/account.js?v=45"></script>
+  <script src="src/js/account.js?v=46"></script>
   <script src="src/js/reminders.js?v=44"></script>
-  <script src="src/js/app.js?v=43"></script>
+  <script src="src/js/app.js?v=44"></script>
 
   <!-- Nodos ocultos de compatibilidad mientras se renueva la caché de la PWA -->
   <p id="falta-legal" class="hidden" aria-hidden="true"></p>

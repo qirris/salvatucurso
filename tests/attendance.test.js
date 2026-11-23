@@ -6,6 +6,7 @@ const vm = require('vm');
 
 const code = [
   'src/js/attendance.js',
+  'src/js/attendance-ui.js',
   'src/js/calendar.js',
   'src/js/absence-day.js',
   'src/js/storage.js',
@@ -49,12 +50,12 @@ const sample = {
 };
 
 const store = {};
-store['miAsistenciaState'] = JSON.stringify(sample);
+store['salvatucursoStateV3'] = JSON.stringify(sample);
 
 const dummyEl = () => ({
   value: '', innerHTML: '', textContent: '', style: {}, dataset: {},
   classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
-  addEventListener() {}, appendChild() {}, files: [],
+  addEventListener() {}, appendChild() {}, setAttribute() {}, files: [],
   showModal() {}, close() {}, closest() { return null; }
 });
 
@@ -128,7 +129,7 @@ assert(g.totalPlan === 270, 'horas planificadas globales = 270');
 
 // Cambiar a ESO con criterio 15% y recalcular estado
 st.etapa = 'eso';
-st.config.criterio = { tipo: 'porcentaje', valor: 15 };
+st.config.criterio = { tipo: 'porcentaje', valor: 15, referencia: 'Plan de Convivencia, curso 2026/27, página 10', revision: '2026-11-23' };
 const e1eso = sandbox.estadoAsignatura(a1, sandbox.calcAsignatura(a1));
 assert(e1eso.tone === 'red', 'a1 en ESO con criterio 15% = límite superado (obtenido ' + e1eso.tone + ')');
 
@@ -165,7 +166,7 @@ sandbox.__setState(fresh);
 assert(sandbox.getSetupProgress().step === 1, 'un curso nuevo empieza por elegir etapa');
 fresh.config.onboarding.etapaConfirmada = true;
 assert(sandbox.getSetupProgress().step === 2, 'después de la etapa se añaden asignaturas');
-fresh.asignaturas.push({id:'n1',nombre:'Matemáticas',archivada:false});
+fresh.asignaturas.push({id:'n1',nombre:'Matemáticas',archivada:false,horasTotales:120,computo:{origen:'estimado',referencia:'',inicio:''},criterio:null});
 assert(sandbox.getSetupProgress().step === 3, 'con una asignatura se propone preparar el horario');
 fresh.horario.casillas['lunes|' + fresh.horario.franjas.find(f => f.tipo === 'clase').id] = {asignaturaId:'n1'};
 assert(sandbox.getSetupProgress().step === 4, 'la primera clase asignada completa los primeros pasos');

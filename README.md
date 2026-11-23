@@ -41,7 +41,7 @@ Las capturas muestran un curso ficticio preparado para esta presentación. No co
 | Función | Para qué sirve |
 | --- | --- |
 | **Inicio** | Ver la clase actual o siguiente, las entregas cercanas y el estado de asistencia. |
-| **Asignaturas** | Organizar las materias, sus colores y sus horas planificadas. |
+| **Asignaturas** | Organizar las materias y sus colores, estimar horas con semanas editables o introducir el total confirmado por ti. |
 | **Horario** | Preparar la semana, cambiar una clase, marcar recreos y copiar un día a otros. En móvil puedes consultarlo por días. |
 | **Mis tareas** | Anotar deberes, exámenes, trabajos, proyectos y notas; filtrar las actividades y marcar lo completado. |
 | **Faltas** | Registrar una ausencia manual o seleccionar las clases completas que perdiste en un día. La app calcula su duración y avisa de posibles coincidencias. |
@@ -54,6 +54,10 @@ También puedes recuperar durante unos segundos tareas o faltas con **Deshacer**
 Cuando se publica una versión nueva, SalvaTuCurso muestra **Actualización disponible**. Puedes aplicarla con **Actualizar ahora** o dejarla para más tarde; la app nunca interrumpe lo que estás haciendo con una recarga automática.
 
 En móvil, la barra inferior da acceso a **Inicio, Mis tareas, Horario, Faltas y Más**. Dentro de **Más** están Asignaturas, Historial y Ajustes.
+
+La asistencia se presenta mediante **ausencias sobre el total previsto**. Puedes empezar con una estimación de horas semanales por semanas (30 inicialmente, editables). El indicador rojo de **Ajustes** señala las asignaturas cuyas horas o criterios del centro siguen pendientes. Encontrarás ayuda para consultar la programación didáctica o preguntar a tutoría. Las cifras estimadas son orientativas; el centro determina la aplicación de sus reglas y el procedimiento de evaluación.
+
+En la primera actualización al formato de datos 3 puedes descargar una copia anterior antes de continuar. La app conserva los totales existentes y los marca pendientes de confirmar. Actualiza también la app de tus otros dispositivos antes de sincronizar el formato nuevo.
 
 ## Primeros pasos
 

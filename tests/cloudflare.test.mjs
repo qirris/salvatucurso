@@ -36,9 +36,9 @@ const mails = [], background = [];
 const env = { DB: db, APP_ORIGIN: 'http://localhost:8787', BETTER_AUTH_SECRET: randomBytes(40).toString('base64url'),
   AUTH_EMAIL_ENABLED: 'true', EMAIL_FROM: 'pruebas@example.test', EMAIL: { async send(email) { mails.push(email); } } };
 const ctx = { waitUntil(promise) { background.push(promise); } };
-async function call(path, method = 'GET', body, cookie = '', origin = env.APP_ORIGIN) {
+async function call(path, method = 'GET', body, cookie = '', origin = env.APP_ORIGIN, dataVersion = '3') {
   const response = await worker.fetch(new Request(env.APP_ORIGIN + path, { method,
-    headers: { Origin: origin, 'Content-Type': 'application/json', Cookie: cookie, 'cf-connecting-ip': '127.0.0.1' },
+    headers: { Origin: origin, 'Content-Type': 'application/json', Cookie: cookie, 'cf-connecting-ip': '127.0.0.1', 'X-SalvaTuCurso-Data-Version': dataVersion },
     body: body === undefined ? undefined : JSON.stringify(body) }), env, ctx);
   await Promise.all(background.splice(0));
   return response;
@@ -77,9 +77,12 @@ try {
   const before = await call('/api/course'); assert.equal(before.status, 401);
   assert.equal((await (await call('/api/course', 'GET', undefined, a.cookie)).json()).state, null);
   const due = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-  const course = { version: 2, etapa: 'fp_superior', asignaturas: [{ id: 'a', nombre: 'Redes', archivada: false }],
+  const course = { version: 3, etapa: 'fp_superior', asignaturas: [{ id: 'a', nombre: 'Redes', archivada: false, horasTotales: 120, computo: { origen: 'estimado', referencia: '', inicio: '' }, criterio: null }],
     tareas: [{ id: 't', asignaturaId: 'a', titulo: 'Examen de redes', tipo: 'examen', estado: 'pendiente', fechaEntrega: due }],
-    faltas: [{ id: 'f', asignaturaId: 'a', fecha: '2026-11-12', horas: 1 }], config: { onboarding: { oculto: true } }, horario: null };
+    faltas: [{ id: 'f', asignaturaId: 'a', fecha: '2026-11-12', horas: 1, procedencia: 'sin_especificar' }], config: { criterio: null, onboarding: { oculto: true } }, horario: null };
+  assert.equal((await call('/api/course', 'GET', undefined, a.cookie, env.APP_ORIGIN, '')).status, 426, 'un cliente antiguo no lee el nuevo curso');
+  assert.equal((await call('/api/course', 'PUT', { revision: null, state: course }, a.cookie, env.APP_ORIGIN, '2')).status, 426, 'un cliente antiguo no sustituye los datos nuevos');
+  assert.equal((await call('/api/course', 'PUT', { revision: null, state: { ...course, asignaturas: [{ id: 'a' }] } }, a.cookie)).status, 400, 'rechaza formato nuevo incompleto antes de guardar');
   let result = await call('/api/course', 'PUT', { revision: null, state: course }, a.cookie);
   assert.equal(result.status, 200); let revision = (await result.json()).revision;
   assert.deepEqual((await (await call('/api/course', 'GET', undefined, a.cookie)).json()).state, course);

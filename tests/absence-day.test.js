@@ -2,7 +2,7 @@
 (function absenceDayTest() {
   const fs = require('fs'), vm = require('vm'), assert = require('assert/strict');
   const copy = value => JSON.parse(JSON.stringify(value));
-  const code = ['attendance','calendar','absence-day','storage','schedule','tasks','history','recovery','app']
+  const code = ['attendance','attendance-ui','calendar','absence-day','storage','schedule','tasks','history','recovery','app']
     .map(name => fs.readFileSync('src/js/' + name + '.js','utf8')).join('\n') + '\nthis.getState=()=>state;';
   const sample = {
     version:2, etapa:'fp_superior',
@@ -21,7 +21,7 @@
   function harness(persisted=null) {
     let now=new Date(2026,10,13,12).getTime(),failKey='',readFails=false,nextTimer=1;
     class ClockDate extends Date {constructor(...args){super(...(args.length?args:[now]));}static now(){return now;}}
-    const store=copy(persisted||{miAsistenciaState:JSON.stringify(sample)}),nodes=new Map(),timers=new Map(),docEvents={},winEvents={};
+    const store=copy(persisted||{salvatucursoStateV3:JSON.stringify(sample)}),nodes=new Map(),timers=new Map(),docEvents={},winEvents={};
     let document;
     function node(selector) {
       if(selector==='dialog[open]') return [...nodes.values()].find(el=>el.open)||null;
@@ -74,7 +74,7 @@
   assert.equal(s.buildAbsenceDayBatch(plan,all(plan),[],'invalid','').ok,false);
   // Identidad estable tras regenerar franjas y normalizar/importar.
   s.saveState();assert.equal(s.UndoManager.addAbsences(built.records),true);
-  let normalized=s.normalizeState(JSON.parse(h.store.miAsistenciaState));
+  let normalized=s.normalizeState(JSON.parse(h.store.salvatucursoStateV3));
   assert.deepEqual(copy(normalized.faltas.slice(1).map(f=>f.sesion)),copy(built.records.map(f=>f.sesion)));
   h.state().horario.franjas.forEach(slot=>{const old=slot.id;slot.id='new-'+old;h.state().horario.dias.forEach(day=>{
     const key=day+'|'+old;if(h.state().horario.casillas[key]){h.state().horario.casillas[day+'|'+slot.id]=h.state().horario.casillas[key];delete h.state().horario.casillas[key];}});});
@@ -116,19 +116,19 @@
   assert.equal(h.state().faltas[1].motivo,'Editada después');assert.match(h.node('#toast').textContent,/conservado/);
   h=harness();s=h.s;plan=h.open();h.change(plan.rows[0]);s.saveAbsenceDay();h.advance(10001);assert.equal(s.UndoManager.restore(),false);assert.equal(h.state().faltas.length,2);
   h=harness();s=h.s;plan=h.open();h.change(plan.rows[0]);s.saveAbsenceDay();h.node('#undo-notice').fire('focusin');h.advance(20000);assert.equal(s.UndoManager.restore(),true);
-  h=harness();s=h.s;s.UndoManager.remove('faltas','old');assert.equal(JSON.parse(h.store.salvatucursoDeshacer).kind,undefined);
+  h=harness();s=h.s;s.UndoManager.remove('faltas','old');assert.equal(JSON.parse(h.store.salvatucursoDeshacerV3).kind,undefined);
   const oldReload=harness(h.store);assert.equal(oldReload.s.UndoManager.restore(),true);assert.equal(oldReload.state().faltas.length,1);
   // Alternar altas y borrados mantiene la recuperación de la última acción.
   h=harness();s=h.s;plan=h.open();h.change(plan.rows[0]);s.saveAbsenceDay();s.UndoManager.remove('faltas','old');s.UndoManager.restore();assert.equal(h.state().faltas.length,2);
   s.UndoManager.remove('faltas','old');plan=h.open();h.change(plan.rows[1]);s.saveAbsenceDay();s.UndoManager.restore();
   assert.equal(h.state().faltas.length,1);assert.notEqual(h.state().faltas[0].id,'old');
   // Todo o nada al fallar el diario o los datos.
-  for(const failed of ['salvatucursoDeshacer','miAsistenciaState']){
-    h=harness();s=h.s;s.UndoManager.remove('faltas','old');const before=copy(h.state()),journal=h.store.salvatucursoDeshacer;
+  for(const failed of ['salvatucursoDeshacerV3','salvatucursoStateV3']){
+    h=harness();s=h.s;s.UndoManager.remove('faltas','old');const before=copy(h.state()),journal=h.store.salvatucursoDeshacerV3;
     plan=h.open();h.change(plan.rows[0]);h.fail(failed);assert.equal(s.saveAbsenceDay(),false);assert.deepEqual(copy(h.state()),before);
-    assert.equal(h.store.salvatucursoDeshacer,journal);assert.equal(h.node('#dialog-day-absence').open,true);h.fail('');assert.equal(s.UndoManager.restore(),true);
+    assert.equal(h.store.salvatucursoDeshacerV3,journal);assert.equal(h.node('#dialog-day-absence').open,true);h.fail('');assert.equal(s.UndoManager.restore(),true);
   }
-  h=harness();s=h.s;plan=h.open();h.change(plan.rows[0]);h.store.miAsistenciaState=JSON.stringify({changed:true});
+  h=harness();s=h.s;plan=h.open();h.change(plan.rows[0]);h.store.salvatucursoStateV3=JSON.stringify({changed:true});
   assert.equal(s.saveAbsenceDay(),false);assert.equal(h.state().faltas.length,1);assert.match(h.node('#day-absence-feedback').textContent,/otra pestaña/);
   h=harness();s=h.s;plan=h.open();h.change(plan.rows[0]);h.failRead(true);assert.equal(s.saveAbsenceDay(),false);assert.equal(h.state().faltas.length,1);
   h=harness();s=h.s;plan=h.open();h.change(plan.rows[0]);h.state().horario.franjas[0].fin='08:15';s.saveState();

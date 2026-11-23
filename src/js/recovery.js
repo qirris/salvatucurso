@@ -1,6 +1,6 @@
 /* Recuperación breve de tareas y faltas; separada de los datos académicos. */
 var UndoManager = (function recoveryController() {
-  const KEY = 'salvatucursoDeshacer';
+  const KEY = 'salvatucursoDeshacerV3';
   const WINDOW_MS = 10000;
   let batch = null, timer = null, bound = false;
   const pauses = new Set();

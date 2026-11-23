@@ -129,6 +129,8 @@ export default {
       if (request.method !== 'GET' && request.headers.get('Origin') !== env.APP_ORIGIN) return json({ error: 'Origen no permitido' }, 403);
       const session = await auth.api.getSession({ headers: request.headers });
       if (!session?.user?.emailVerified) return json({ error: 'Inicia sesión para continuar' }, 401);
+      if (url.pathname === '/api/course' && request.headers.get('X-SalvaTuCurso-Data-Version') !== '3')
+        return json({ code: 'update_required', error: 'Actualiza SalvaTuCurso para sincronizar el nuevo formato de horas. Tus datos se conservan.' }, 426);
       const userId = session.user.id;
       if (request.method !== 'GET') {
         const now = Date.now(), key = 'curso:' + userId + ':' + Math.floor(now / 60000);
@@ -147,7 +149,7 @@ export default {
         return await deleteAccount(env, session.user);
       }
       return json({ error: 'No disponible' }, 404);
-    } catch (error) { return json({ error: 'No se ha podido completar la operación' }, error instanceof SyntaxError ? 400 : 503); }
+    } catch (error) { return json({ error: 'No se ha podido completar la operación' }, error instanceof SyntaxError || error instanceof TypeError ? 400 : 503); }
   },
   async scheduled(controller, env, ctx) { ctx.waitUntil(dispatch(env)); }
 };

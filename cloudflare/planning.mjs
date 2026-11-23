@@ -32,7 +32,17 @@ export function jobsForCourse(course, prefs, timeZone, now = Date.now()) {
   return jobs;
 }
 export function validateCourse(value) {
-  if (!value || value.version !== 2 || !Array.isArray(value.asignaturas) || !Array.isArray(value.tareas) || !Array.isArray(value.faltas) || !value.config) throw new Error('Curso inválido');
+  if (!value || value.version !== 3 || !Array.isArray(value.asignaturas) || !Array.isArray(value.tareas) || !Array.isArray(value.faltas) || !value.config) throw new TypeError('Curso inválido');
+  const ruleValid = rule => rule === null || !!rule && ['', 'horas', 'porcentaje', 'manual'].includes(rule.tipo) &&
+    (rule.valor === null || Number.isFinite(rule.valor) && rule.valor >= 0 && (rule.tipo !== 'porcentaje' || rule.valor <= 100)) &&
+    ['superar', 'alcanzar'].includes(rule.operador) && ['todas', 'injustificadas'].includes(rule.faltas) &&
+    typeof rule.referencia === 'string' && rule.referencia.length <= 1000 && typeof rule.revision === 'string' && (!rule.revision || validDate(rule.revision)) &&
+    ['', 'eso', 'bachillerato', 'fp_basico', 'fp_medio', 'fp_superior'].includes(rule.etapa);
+  if (!ruleValid(value.config.criterio) || value.asignaturas.some(a => !a?.computo ||
+    !['estimado', 'confirmado'].includes(a.computo.origen) || !Number.isFinite(a.horasTotales) || a.horasTotales < 0 ||
+    typeof a.computo.referencia !== 'string' || a.computo.referencia.length > 1000 || typeof a.computo.inicio !== 'string' ||
+    (a.computo.inicio && !validDate(a.computo.inicio)) || !Object.hasOwn(a, 'criterio') || !ruleValid(a.criterio)) ||
+    value.faltas.some(f => !['centro', 'empresa', 'sin_especificar'].includes(f?.procedencia))) throw new TypeError('Formato académico incompleto');
   for (const name of ['asignaturas', 'tareas', 'faltas']) {
     if (value[name].length > 10000) throw new Error('Curso demasiado grande');
     const ids = new Set();

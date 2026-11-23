@@ -10,6 +10,26 @@ La guía opcional de Inicio permite elegir la etapa, añadir asignaturas y coloc
 
 Inicio actualiza la fecha, la clase actual o siguiente y los avisos al cambiar de minuto cuando es necesario y al volver a la aplicación. Las actualizaciones no reinician los formularios.
 
+## Horas estimadas, horas del centro y criterios
+
+Al crear o editar una asignatura, **Estimar las horas** multiplica sus horas semanales por las semanas previstas. La app propone 30 semanas como suposición editable, no como duración oficial. Si conoces el total, elige **Introducir el total del centro**. Se identificará como **Confirmadas por ti**; puedes dejar las horas semanales vacías y anotarlas después para organizar el horario. Cambiar las horas semanales no modifica un total confirmado.
+
+Para encontrar el total, consulta la programación didáctica, la plataforma del curso o al profesorado/tutoría y busca «duración total» o «carga horaria». **Ajustes → Revisa tus datos de asistencia** muestra qué falta por confirmar y permite abrir cada asignatura. El indicador rojo cuenta las asignaturas activas con horas estimadas o criterios incompletos; siempre incluye texto accesible.
+
+En **Ajustes → Criterio general del centro** puedes guardar un criterio para tu etapa actual. Al editar cada asignatura puedes definir una excepción. Introduce el umbral del curso completo en horas o porcentaje, si se aplica al alcanzar o superar el valor, el documento y apartado del centro y la fecha de consulta. Sin documentación, el criterio se conserva como pendiente. Para reglas por trimestre, sesiones u otras condiciones elige **Revisión manual**. Una regla guardada para otra etapa no se aplica automáticamente al cambiar de enseñanza.
+
+En FP presencial se cuentan las faltas justificadas y no justificadas. La referencia autonómica del 80 % de asistencia se muestra separada del criterio del centro. El aviso desde el 15 % de ausencia es una precaución de la app. En ESO/Bachillerato, indica qué faltas cuenta el documento del centro. Ningún resultado declara que hayas suspendido: corresponde al centro comunicar la pérdida de evaluación continua y establecer las pruebas alternativas.
+
+Las cifras muestran **ausencias sobre el total previsto**, no horas que necesariamente hayas asistido hasta hoy. Las estimaciones quedan señaladas y el resumen global es orientativo, no un criterio legal para todo el curso.
+
+En FP puedes añadir una fecha de matrícula o inicio del cómputo. Las ausencias anteriores se mantienen en Historial, pero se excluyen del cálculo y se indica cuántas son. El total confirmado debe corresponder al periodo desde esa fecha e incluir las horas de centro y empresa que procedan. El formulario manual y la edición de faltas permiten distinguir **Centro**, **Empresa** y **Sin especificar**. El registro por horario crea faltas de centro.
+
+## Actualizar un curso anterior
+
+Antes de guardar por primera vez el formato 3, la app ofrece **Descargar copia anterior** y **Continuar**. Conserva el curso previo en el almacenamiento antiguo y utiliza una clave distinta para el nuevo formato. Se mantienen las horas, colores, tareas, faltas, franjas y calendario; las horas anteriores quedan pendientes de confirmar. Una edición de nombre o color conserva un total antiguo aunque no coincida con la multiplicación de sus horas semanales y semanas.
+
+Los otros dispositivos deben actualizar la aplicación para sincronizar. El servidor rechaza el acceso al curso desde clientes antiguos. Puedes importar copias anteriores, y se rechazan versiones futuras o formatos nuevos incompletos. Si falla el guardado, conserva tu copia y vuelve a intentarlo. La actualización de formato empieza un diario nuevo de **Deshacer**: una operación pendiente de una versión antigua debe resolverse antes de actualizar.
+
 ## Tareas y exámenes
 
 Al crear una tarea se muestran título, asignatura y fecha de entrega. **Más opciones** reúne tipo, prioridad, estado y notas. Al editar una actividad con detalles adicionales, este apartado se abre automáticamente y conserva sus valores aunque guardes con él plegado.

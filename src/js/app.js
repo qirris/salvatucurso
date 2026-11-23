@@ -203,10 +203,10 @@ function render() {
 function subjectCard(a) {
   const c = calcAsignatura(a);
   const e = estadoAsignatura(a, c);
-  const pct = c.pct == null ? 0 : c.pct;
+  const pct = c.pctAusencia == null ? 0 : c.pctAusencia;
   const meta = [];
   if (a.horasSemanales) meta.push(fmt(a.horasSemanales) + ' h/sem');
-  if (a.semanas) meta.push(a.semanas + ' semanas');
+  if (a.semanas && horasEstimadas(a)) meta.push(a.semanas + ' semanas');
   return `
     <article class="subject tone-${e.tone}">
       <div class="subject-top">
@@ -218,11 +218,11 @@ function subjectCard(a) {
       </div>
       <div class="progress tone-${e.tone}"><span style="width:${Math.max(0, Math.min(100, pct))}%"></span></div>
       <div class="subject-stats">
-        <span>Asistidas: <strong>${fmt(c.horasAsistidas)} h</strong></span>
         <span>Planificadas: <strong>${fmt(c.horasPlanificadas)} h</strong></span>
         <span>Ausencia: <strong>${fmt(c.horasAusencia)} h</strong></span>
-        <span>Asistencia: <strong>${c.pct == null ? '—' : fmt(c.pct) + '%'}</strong></span>
+        <span>Ausencia sobre el total previsto: <strong>${c.pctAusencia == null ? '—' : fmt(c.pctAusencia) + '%'}</strong></span>
       </div>
+      ${subjectAttendanceNote(a, c)}
     </article>
   `;
 }
@@ -249,7 +249,7 @@ function renderDashboardStats() {
   if (!hasSubjects) { cont.innerHTML = ''; return; }
   const absences = state.faltas.reduce((s, f) => s + (Number(f.horas) || 0), 0);
   cont.innerHTML = `
-    <span><strong>${g.pct == null ? '—' : fmt(g.pct) + '%'}</strong> de asistencia</span>
+    <span><strong>${g.pctAusencia == null ? '—' : fmt(g.pctAusencia) + '%'}</strong> de ausencia sobre horas previstas (orientativo)</span>
     <span><strong>${g.activas.length}</strong> asignatura${g.activas.length === 1 ? '' : 's'}</span>
     <span><strong>${fmt(absences)} h</strong> de ausencia</span>`;
 }
@@ -263,9 +263,9 @@ function renderDashboardAlerts() {
     const c = calcAsignatura(a);
     const e = estadoAsignatura(a, c);
     if (e.tone === 'red') {
-      avisos.push({ type: 'danger', text: `${uiIcon('warning')} <strong>${esc(a.nombre)}</strong>: Límite de asistencia superado (${e.label}).` });
+      avisos.push({ type: 'danger', text: `${uiIcon('warning')} <strong>${esc(a.nombre)}</strong>: ${esc(e.label)}.${horasEstimadas(a) ? ' Estimación orientativa.' : ''}` });
     } else if (e.tone === 'yellow') {
-      avisos.push({ type: 'warn', text: `${uiIcon('warning')} <strong>${esc(a.nombre)}</strong>: Cerca del límite de asistencia (${e.label}).` });
+      avisos.push({ type: 'warn', text: `${uiIcon('warning')} <strong>${esc(a.nombre)}</strong>: ${esc(e.label)}.${horasEstimadas(a) ? ' Estimación orientativa.' : ''}` });
     }
   });
 
@@ -335,21 +335,19 @@ function renderDashboardAttendanceSummary() {
   }
 
   const totalPlan = g.totalPlan;
-  const totalAsist = g.totalAsist;
-  const totalAusent = totalPlan - totalAsist;
-  const pct = g.pct != null ? g.pct : 0;
+  const totalAusent = g.totalAusencia;
+  const pct = g.pctAusencia != null ? g.pctAusencia : 0;
 
   cont.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;font-weight:700;">
-      <span>Asistencia global</span>
-      <span>${g.pct == null ? '—' : fmt(g.pct) + '%'}</span>
+      <span>Ausencias sobre horas previstas · orientativo</span>
+      <span>${g.pctAusencia == null ? '—' : fmt(g.pctAusencia) + '%'}</span>
     </div>
     <div class="progress" style="height:12px;margin-bottom:.85rem;">
       <span style="width:${Math.max(0, Math.min(100, pct))}%"></span>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;text-align:center;font-size:.8rem;color:var(--muted);">
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;text-align:center;font-size:.8rem;color:var(--muted);">
       <div style="background:var(--gray-soft);padding:.5rem;border-radius:8px;">Planificadas<br><strong style="color:var(--text);">${fmt(totalPlan)} h</strong></div>
-      <div style="background:var(--gray-soft);padding:.5rem;border-radius:8px;">Asistidas<br><strong style="color:var(--green);">${fmt(totalAsist)} h</strong></div>
       <div style="background:var(--gray-soft);padding:.5rem;border-radius:8px;">Ausencias<br><strong style="color:var(--red);">${fmt(totalAusent)} h</strong></div>
     </div>
   `;
@@ -374,7 +372,7 @@ function renderDashboardSubjects() {
       <div class="summary-row sc-${a.color}" style="padding:.5rem .75rem;">
         <span class="color-dot"></span>
         <span class="sr-name" style="font-size:.84rem;">${esc(a.nombre)}</span>
-        <span class="sr-data">${c.pct == null ? '—' : fmt(c.pct) + '%'}</span>
+        <span class="sr-data">${c.pctAusencia == null ? '—' : fmt(c.pctAusencia) + '% ausente'}${horasEstimadas(a) ? ' · estimado' : ''}</span>
         <span class="badge ${e.tone}" style="font-size:.65rem;padding:.15rem .4rem;">${e.label}</span>
       </div>
     `;
@@ -478,7 +476,7 @@ function asigCardAdmin(a) {
       <div class="subject-top">
         <div>
           <div class="subject-name"><span class="color-dot sc-${a.color}"></span>${esc(a.nombre)}${a.archivada ? ' <span class="badge gray">Archivada</span>' : ''}</div>
-          <div class="subject-meta">${a.horasSemanales ? fmt(a.horasSemanales) + ' h/sem' : '—'} · ${a.semanas ? a.semanas + ' semanas' : '—'} · Total ${fmt(c.horasPlanificadas)} h</div>
+          <div class="subject-meta">${a.horasSemanales ? fmt(a.horasSemanales) + ' h/sem' : 'Sin horas semanales'}${a.semanas && horasEstimadas(a) ? ' · ' + a.semanas + ' semanas' : ''} · Total ${fmt(c.horasPlanificadas)} h</div>
         </div>
         <span class="badge ${e.tone}">${e.label}</span>
       </div>
@@ -487,6 +485,7 @@ function asigCardAdmin(a) {
         <button class="btn btn-ghost btn-sm" type="button" data-archive="${a.id}">${a.archivada ? 'Restaurar' : 'Archivar'}</button>
         <button class="btn btn-danger btn-sm" type="button" data-delete="${a.id}">Eliminar</button>
       </div>
+      ${subjectAttendanceNote(a, c)}
     </article>
   `;
 }
@@ -518,7 +517,7 @@ function histItem(f) {
     <div class="history-item">
       <div class="h-main">
         <div>${esc(nombre)}</div>
-        <div class="h-sub">${esc(f.fecha)}${f.sesion ? ' · ' + absenceSessionText(f) : ''} · ${f.tipo === 'justificada' ? 'Justificada' : 'No justificada'}${f.motivo ? ' · ' + esc(f.motivo) : ''}</div>
+        <div class="h-sub">${esc(f.fecha)} · ${f.procedencia === 'empresa' ? 'Empresa' : f.procedencia === 'centro' ? 'Centro' : 'Sin especificar'}${f.sesion ? ' · ' + absenceSessionText(f) : ''} · ${f.tipo === 'justificada' ? 'Justificada' : 'No justificada'}${f.motivo ? ' · ' + esc(f.motivo) : ''}</div>
       </div>
       <div class="h-hours">${formatAbsenceDuration(f.horas)}</div>
     </div>
@@ -558,17 +557,13 @@ function renderConfig() {
   $('#cfg-etapa').value = state.etapa;
   $('#cfg-zoom').checked = isZoomAllowed();
   const tipo = (ETAPAS[state.etapa] || {}).tipo;
-  $('#cfg-criterio-wrap').style.display = tipo === 'fp' ? 'none' : 'block';
-
-  const crit = state.config.criterio || {};
-  $('#cfg-criterio-tipo').value = crit.tipo || '';
-  $('#cfg-criterio-valor').value = crit.valor == null ? '' : crit.valor;
+  renderAttendanceReview();
 
   $('#cfg-legal').textContent = tipo === 'fp'
     ? 'FP presencial: asistencia mínima del 80 % (Orden de 18/09/2025, art. 2.4). El centro puede concretar en su Proyecto educativo el incumplimiento que determina la pérdida.'
     : 'ESO/Bachillerato: el máximo de faltas lo fija el Plan de Convivencia del IES (Decreto 327/2010, art. 34.3). La aplicación no impone un porcentaje autonómico.';
 
-  $('#cfg-info').textContent = 'Versión de datos: ' + state.version + '. Revisión normativa: 09/11/2026. Fuentes: BOJA y Junta de Andalucía.';
+  $('#cfg-info').textContent = 'Versión de datos: ' + state.version + '. Revisión normativa: 23/11/2026. Ámbito: Andalucía, enseñanza presencial. Fuentes: BOJA y Junta de Andalucía.';
 }
 
 /* ---------- Eventos: navegación ---------- */
@@ -746,11 +741,9 @@ function bindAsignaturas() {
       hasError = true;
     }
 
-    if (isNaN(h) || h <= 0) {
-      setFieldError(horasInput, 'Indica un número válido de horas semanales.');
-      if (!firstErr) firstErr = horasInput;
-      hasError = true;
-    }
+    let attendance;
+    try { attendance = readSubjectHours('asig', null); }
+    catch (error) { attendanceFormError('asig', error); return; }
 
     if (hasError) {
       if (firstErr) firstErr.focus();
@@ -758,21 +751,19 @@ function bindAsignaturas() {
     }
 
     const color = colorInput.value || PALETA[state.asignaturas.length % PALETA.length];
-    const semanas = 30; // Estándar académico predeterminado
-    const horasTotales = h * semanas;
-
-    state.asignaturas.push({
+    const next = JSON.parse(JSON.stringify(state));
+    next.asignaturas.push({
       id: uid(),
       nombre,
       color,
-      horasSemanales: h,
-      semanas,
-      horasTotales,
+      ...attendance,
       archivada: false
     });
-    saveState();
+    try { commitAcademicChange(next); }
+    catch (error) { attendanceFormError('asig', error); return; }
     nombreInput.value = '';
     horasInput.value = '';
+    mountSubjectHours('asig', null);
     setColorPicker('#asig-color-picker', '#asig-color', PALETA[state.asignaturas.length % PALETA.length]);
     updatePreview();
     if (formCard) formCard.classList.add('hidden');
@@ -833,7 +824,10 @@ function openEdit(id) {
   $('#dlg-nombre').value = a.nombre;
   setColorPicker('#dlg-color-picker', '#dlg-color', a.color);
   $('#dlg-horas').value = a.horasSemanales == null ? '' : a.horasSemanales;
+  clearFormErrors($('#dialog-asig'));
+  mountSubjectHours('dlg', a);
   $('#dialog-asig').showModal();
+  $('#dlg-nombre').focus();
 }
 
 function bindDialog() {
@@ -859,24 +853,19 @@ function bindDialog() {
       if (!firstErr) firstErr = nombreInput;
       hasError = true;
     }
-    if (isNaN(h) || h <= 0) {
-      setFieldError(horasInput, 'Las horas semanales deben ser mayores que 0.');
-      if (!firstErr) firstErr = horasInput;
-      hasError = true;
-    }
+    let attendance;
+    try { attendance = readSubjectHours('dlg', a); }
+    catch (error) { attendanceFormError('dlg', error); return; }
 
     if (hasError) {
       if (firstErr) firstErr.focus();
       return toast('Revisa los campos marcados en rojo');
     }
 
-    const semanas = a.semanas || 30;
-    a.nombre = nombre;
-    a.color = $('#dlg-color').value || a.color || 'azul';
-    a.horasSemanales = h;
-    a.semanas = semanas;
-    a.horasTotales = h * semanas;
-    saveState();
+    const next = JSON.parse(JSON.stringify(state));
+    Object.assign(next.asignaturas.find(item => item.id === a.id), attendance, { nombre, color: $('#dlg-color').value || a.color || 'azul' });
+    try { commitAcademicChange(next); }
+    catch (error) { attendanceFormError('dlg', error); return; }
     dialogEl.close();
     toast('Cambios guardados');
     render();
@@ -907,8 +896,8 @@ function bindFaltas() {
       if (!firstErr) firstErr = asignaturaEl;
       hasError = true;
     }
-    if (!fecha) {
-      setFieldError(fechaEl, 'Selecciona una fecha.');
+    if (!validAttendanceDate(fecha) || fecha > todayISO()) {
+      setFieldError(fechaEl, 'Selecciona una fecha existente, de hoy o pasada.');
       if (!firstErr) firstErr = fechaEl;
       hasError = true;
     }
@@ -928,7 +917,7 @@ function bindFaltas() {
       if (!confirm('Has indicado más horas que el total planificado de la asignatura. ¿Continuar?')) return;
     }
 
-    state.faltas.push({ id: uid(), asignaturaId, fecha, horas, tipo, motivo });
+    state.faltas.push({ id: uid(), asignaturaId, fecha, horas, tipo, motivo, procedencia: $('#falta-procedencia').value });
     saveState();
     horasEl.value = '';
     $('#falta-motivo').value = '';
@@ -950,6 +939,7 @@ function openFaltaEdit(id) {
   $('#dlg-falta-horas').value = f.horas;
   $('#dlg-falta-tipo').value = f.tipo;
   $('#dlg-falta-motivo').value = f.motivo || '';
+  $('#dlg-falta-procedencia').value = f.procedencia || 'sin_especificar';
   $('#dialog-falta').showModal();
 }
 
@@ -967,7 +957,7 @@ function bindDialogFalta() {
     const motivo = $('#dlg-falta-motivo').value.trim();
 
     if (!asignaturaId) return toast('Selecciona una asignatura');
-    if (!fecha) return toast('Selecciona una fecha');
+    if (!validAttendanceDate(fecha) || fecha > todayISO()) return toast('Selecciona una fecha existente, de hoy o pasada');
     if (isNaN(horas) || horas <= 0) return toast('Las horas deben ser mayores que 0');
 
     if (f.asignaturaId !== asignaturaId || f.fecha !== fecha || f.horas !== horas) delete f.sesion;
@@ -976,6 +966,7 @@ function bindDialogFalta() {
     f.horas = horas;
     f.tipo = tipo;
     f.motivo = motivo;
+    f.procedencia = $('#dlg-falta-procedencia').value;
     saveState();
     $('#dialog-falta').close();
     toast('Falta actualizada');
@@ -993,6 +984,8 @@ function bindConfig() {
     state.etapa = e.target.value;
     state.config.onboarding.etapaConfirmada = true;
     saveState();
+    $('#center-rule-form').dataset.dirty = 'false';
+    mountSubjectHours('asig', null);
     toast('Etapa actualizada');
     render();
   });
@@ -1008,20 +1001,6 @@ function bindConfig() {
       applyZoomPreference();
       toast('No se pudo guardar esta preferencia');
     }
-  });
-
-  $('#cfg-criterio-tipo').addEventListener('change', (e) => {
-    state.config.criterio.tipo = e.target.value;
-    saveState();
-    render();
-  });
-
-  $('#cfg-criterio-valor').addEventListener('input', (e) => {
-    const v = e.target.value;
-    state.config.criterio.valor = v === '' ? null : Number(v);
-    saveState();
-    renderDashboard();
-    renderAsignaturas();
   });
 
   $('#btn-delete-all').addEventListener('click', deleteAll);
@@ -1055,9 +1034,9 @@ function importJSON(file) {
       if (!confirm(accountCourse ? 'Esto reemplazará el curso actual y se sincronizará con tus otros dispositivos. ¿Continuar?' : 'Esto reemplazará tus datos actuales. ¿Continuar?')) return;
       // Copia de seguridad del estado actual antes de reemplazar
       localStorage.setItem(STORAGE_KEY + '_backup_' + Date.now(), localStorage.getItem(STORAGE_KEY) || '');
+      const next = normalizeState(data);
+      commitAcademicChange(next);
       UndoManager.clear();
-      state = normalizeState(data);
-      saveState();
       toast('Datos importados');
       render();
     } catch (e) {
@@ -1162,7 +1141,11 @@ function bindDashboardRefresh() {
 /* ---------- Inicio ---------- */
 function init() {
   applyZoomPreference();
-  loadState();
+  try { loadState(); } catch (error) {
+    const message = document.createElement('p');
+    message.className = 'note warn'; message.textContent = 'No se ha abierto el curso para proteger tus datos. ' + error.message + ' Conserva tu copia y vuelve a intentarlo con una versión compatible.';
+    document.body.prepend(message); return;
+  }
   initColorPicker('#asig-color-picker', '#asig-color');
   initColorPicker('#dlg-color-picker', '#dlg-color');
   setColorPicker('#asig-color-picker', '#asig-color', PALETA[state.asignaturas.length % PALETA.length]);
@@ -1177,13 +1160,13 @@ function init() {
   bindTasks();
   bindHistory();
   bindConfig();
+  bindAttendanceSettings();
   bindSchoolCalendar();
   setupInstall();
   render();
   UndoManager.bind();
   bindDashboardRefresh();
-  if (typeof CourseAccount !== 'undefined') CourseAccount.bind();
-  if (typeof TaskReminders !== 'undefined') TaskReminders.bind();
+  showDataMigration();
 }
 
 document.addEventListener('DOMContentLoaded', init);

@@ -2,7 +2,7 @@
 (function schoolCalendarTest() {
   const fs = require('fs'), vm = require('vm'), assert = require('assert/strict');
   const clone = value => JSON.parse(JSON.stringify(value));
-  const source = ['attendance', 'calendar', 'absence-day', 'storage', 'schedule', 'tasks', 'history', 'recovery', 'app']
+  const source = ['attendance', 'attendance-ui', 'calendar', 'absence-day', 'storage', 'schedule', 'tasks', 'history', 'recovery', 'app']
     .map(name => fs.readFileSync('src/js/' + name + '.js', 'utf8')).join('\n') +
     '\nthis.getState=()=>state; this.setState=s=>{state=s;};';
   const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
@@ -61,8 +61,8 @@
   }
   let h = harness(), s = h.s;
   assert.deepEqual(clone(h.state().config.calendario), { inicio: '', fin: '', noLectivos: [] });
-  assert.equal(h.state().version, 2);
-  h.store.miAsistenciaState = JSON.stringify(sample); s.loadState();
+  assert.equal(h.state().version, 3);
+  h.store.salvatucursoStateV3 = JSON.stringify(sample); s.loadState();
   assert.equal(s.persistCalendar({ inicio: '2026-09-01', fin: '2027-06-30', noLectivos: [] }), true, 'primer guardado tras cargar el formato anterior');
   assert.equal(s.saveScheduleCell('lunes|h1', { asignaturaId: 'a2' }).ok, true);
   h = harness(); s = h.s;
@@ -138,13 +138,13 @@
   for (const key of ['asignaturas', 'faltas', 'tareas', 'horario']) assert.deepEqual(clone(h.state()[key]), academic[key]);
   assert.deepEqual(clone(h.state().config.onboarding), academic.config.onboarding);
   assert.deepEqual(clone(s.calcAsignatura(h.state().asignaturas[0])), attendanceBefore);
-  const reloaded = s.normalizeState(JSON.parse(h.store.miAsistenciaState)); assert.equal(reloaded.config.calendario.fin, '2027-06-30');
+  const reloaded = s.normalizeState(JSON.parse(h.store.salvatucursoStateV3)); assert.equal(reloaded.config.calendario.fin, '2027-06-30');
   s.openCalendarPeriod(); h.node('#period-start').value = '2027-01-10'; h.node('#period-end').value = '2026-12-24';
   assert.equal(s.saveCalendarPeriod(), false); assert.match(h.node('#period-end').error, /posterior/);
-  h.node('#period-end').value = ''; h.fail('miAsistenciaState');
+  h.node('#period-end').value = ''; h.fail('salvatucursoStateV3');
   const beforeFailure = clone(h.state()); assert.equal(s.saveCalendarPeriod(), false);
   assert.deepEqual(clone(h.state()), beforeFailure); assert.match(h.node('#period-feedback').textContent, /no se ha podido/i);
-  h.fail(''); h.store.miAsistenciaState = JSON.stringify({ other: true });
+  h.fail(''); h.store.salvatucursoStateV3 = JSON.stringify({ other: true });
   assert.equal(s.saveCalendarPeriod(), false); assert.deepEqual(clone(h.state()), beforeFailure);
   // Inicio comparte el calendario y conserva borradores al refrescar fechas.
   h = harness(); s = h.s;
@@ -162,9 +162,9 @@
   // Edición: selección provisional, cancelar y reabrir, luego guardar con desvinculación precisa.
   h = harness(); s = h.s; s.bindSchedule();
   s.openCellDialog('lunes|h1', true);
-  const beforeEdit = clone(h.state()), persisted = h.store.miAsistenciaState;
+  const beforeEdit = clone(h.state()), persisted = h.store.salvatucursoStateV3;
   s.aplicarAsignatura('a2');
-  assert.deepEqual(clone(h.state()), beforeEdit); assert.equal(h.store.miAsistenciaState, persisted);
+  assert.deepEqual(clone(h.state()), beforeEdit); assert.equal(h.store.salvatucursoStateV3, persisted);
   assert.match(h.node('#cell-choice-summary').textContent, /1 actividad seguirá/);
   h.node('#dlg-cell-cancel').fire('click'); assert.equal(h.node('#dialog-cell').open, false);
   s.openCellDialog('lunes|h1', true); assert.equal(h.node('#dlg-cell-save').disabled, true);
@@ -201,10 +201,10 @@
   h.state().horario.casillas['lunes|h1'] = { recreo: true }; s.saveState();
   assert.equal(s.saveScheduleCell('lunes|h1', { asignaturaId: 'a2' }, oldSnapshot).ok, false);
   h = harness(); s = h.s;
-  const prior = clone(h.state()); h.fail('miAsistenciaState');
+  const prior = clone(h.state()); h.fail('salvatucursoStateV3');
   assert.equal(s.saveScheduleCell('lunes|h1', { asignaturaId: 'a2' }).ok, false);
   assert.deepEqual(clone(h.state()), prior);
-  h.fail(''); h.store.miAsistenciaState = JSON.stringify({ other: true });
+  h.fail(''); h.store.salvatucursoStateV3 = JSON.stringify({ other: true });
   assert.equal(s.saveScheduleCell('lunes|h1', null).ok, false); assert.deepEqual(clone(h.state()), prior);
   console.log('OK: calendario manual, límites inclusivos, vacaciones largas, solapamientos, cambios de hora, Inicio, edición de clases y conservación de datos');
 })();

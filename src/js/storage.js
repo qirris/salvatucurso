@@ -3,17 +3,19 @@
    Persistencia en localStorage, migración y normalización de datos.
    ============================================================ */
 
-const STORAGE_KEY = 'miAsistenciaState';
+const STORAGE_KEY = 'salvatucursoStateV3';
+const PREVIOUS_STORAGE_KEY = 'miAsistenciaState';
 const LEGACY_KEY = 'asistenciaData';
 let persistedStateJSON = null;
+let pendingDataMigration = null;
 
 const DEFAULT_STATE = {
-  version: 2,
+  version: 3,
   etapa: 'fp_superior',
   asignaturas: [],
   faltas: [],
   tareas: [],
-  config: { criterio: { tipo: '', valor: null } },
+  config: { criterio: { tipo: '', valor: null, operador: 'superar', faltas: 'todas', referencia: '', revision: '', etapa: 'fp_superior' } },
   horario: null
 };
 
@@ -31,14 +33,11 @@ function todayISO() {
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
   persistedStateJSON = raw;
-  if (raw) {
-    try {
-      const parsed = JSON.parse(raw);
-      state = normalizeState(parsed);
-      return;
-    } catch (e) {
-      console.warn('Estado corrupto, se reinicia.', e);
-    }
+  const previous = raw || localStorage.getItem(PREVIOUS_STORAGE_KEY);
+  if (previous) {
+    state = normalizeState(JSON.parse(previous));
+    if (!raw) pendingDataMigration = previous;
+    return;
   }
   state = normalizeState(JSON.parse(JSON.stringify(DEFAULT_STATE)));
   migrateLegacy();
@@ -75,6 +74,7 @@ function migrateLegacy() {
     });
     // Conservar copia de los datos antiguos antes de migrar
     localStorage.setItem(LEGACY_KEY + '_backup', raw);
+    state = normalizeState(Object.assign({}, state, { version: 2 }));
     saveState();
   } catch (e) {
     console.warn('No se pudo migrar la versión anterior.', e);
@@ -96,7 +96,15 @@ function isStoredStateCurrent() {
 }
 
 function normalizeState(input) {
+  if (input && input.version != null && ![1, 2, 3].includes(input.version)) throw new Error('Esta copia necesita una versión más reciente de SalvaTuCurso.');
+  if (input && input.version === 3 && (!Array.isArray(input.asignaturas) || !Array.isArray(input.faltas) || !Array.isArray(input.tareas) || !input.config ||
+    !validAttendanceRule(input.config.criterio) || input.asignaturas.some(a => !a || !a.computo || !['estimado', 'confirmado'].includes(a.computo.origen) ||
+      !Number.isFinite(a.horasTotales) || a.horasTotales < 0 || typeof a.computo.referencia !== 'string' ||
+      typeof a.computo.inicio !== 'string' || (a.computo.inicio && !validAttendanceDate(a.computo.inicio)) || !Object.prototype.hasOwnProperty.call(a, 'criterio') || !validAttendanceRule(a.criterio)) ||
+    input.faltas.some(f => !f || !['centro', 'empresa', 'sin_especificar'].includes(f.procedencia))))
+    throw new Error('La copia de versión 3 está incompleta. No se han sustituido tus datos.');
   const out = Object.assign({}, DEFAULT_STATE, input || {});
+  out.version = 3;
   if (!ETAPAS[out.etapa]) out.etapa = 'fp_superior';
 
   out.asignaturas = Array.isArray(out.asignaturas)
@@ -106,7 +114,11 @@ function normalizeState(input) {
         color: colorValido(a.color, i),
         horasSemanales: a.horasSemanales == null || a.horasSemanales === '' ? null : Number(a.horasSemanales),
         semanas: a.semanas == null || a.semanas === '' ? null : Number(a.semanas),
-        horasTotales: Number(a.horasTotales) || 0,
+        horasTotales: Number.isFinite(Number(a.horasTotales)) ? Math.max(0, Number(a.horasTotales)) : 0,
+        computo: { origen: a.computo?.origen === 'confirmado' ? 'confirmado' : 'estimado',
+          referencia: String(a.computo?.referencia || '').slice(0, 1000),
+          inicio: validAttendanceDate(a.computo?.inicio) ? a.computo.inicio : '' },
+        criterio: normalizarCriterio(a.criterio),
         archivada: !!a.archivada
       }))
     : [];
@@ -116,7 +128,8 @@ function normalizeState(input) {
         const record = {
           id: String(f.id), asignaturaId: String(f.asignaturaId), fecha: String(f.fecha || todayISO()),
           horas: Number(f.horas) || 0, tipo: f.tipo === 'justificada' ? 'justificada' : 'no_justificada',
-          motivo: String(f.motivo || '')
+          motivo: String(f.motivo || ''),
+          procedencia: ['centro', 'empresa'].includes(f.procedencia) ? f.procedencia : 'sin_especificar'
         };
         const session = normalizeAbsenceSession(f.sesion, record.horas);
         if (session) record.sesion = session;
@@ -149,8 +162,17 @@ function normalizeState(input) {
     etapaConfirmada: typeof savedOnboarding.etapaConfirmada === 'boolean' ? savedOnboarding.etapaConfirmada : out.asignaturas.some(a => !a.archivada),
     oculto: savedOnboarding.oculto === true
   };
-  out.config.criterio = Object.assign({ tipo: '', valor: null }, (out.config || {}).criterio || {});
+  out.config.criterio = normalizarCriterio(out.config.criterio) || normalizarCriterio({});
+  if (!out.config.criterio.etapa) out.config.criterio.etapa = out.etapa;
   out.config.calendario = normalizeCalendar(out.config.calendario);
   out.horario = normalizeHorario(out.horario);
   return out;
+}
+
+// Las nuevas ediciones se aplican completas o conservan el estado anterior.
+function commitAcademicChange(next) {
+  if (!isStoredStateCurrent()) throw new Error('Tus datos han cambiado en otra pestaña. Recarga antes de guardar.');
+  const previous = state;
+  try { state = next; saveState(); }
+  catch (error) { state = previous; throw error; }
 }

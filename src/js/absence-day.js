@@ -95,7 +95,7 @@ function buildAbsenceDayBatch(plan, selected, approved, type, reason) {
   if (!selection.ok) return selection;
   return { ok: true, records: selection.rows.map(row => ({
     id: uid(), asignaturaId: row.asignaturaId, fecha: plan.date, horas: row.minutes / 60,
-    tipo: type, motivo: String(reason || '').trim(), sesion: Object.assign({}, row.session)
+    tipo: type, motivo: String(reason || '').trim(), procedencia: 'centro', sesion: Object.assign({}, row.session)
   })), minutes: selection.minutes };
 }
 function refreshAbsenceDaySelection() {

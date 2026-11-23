@@ -1,26 +1,27 @@
 /* Service Worker — SalvaTuCurso
    Cachea los recursos esenciales para funcionar sin conexión. */
 
-const CACHE_VERSION = 'salvatucurso-v51';
+const CACHE_VERSION = 'salvatucurso-v52';
 const APP_SHELL = [
   './index.html',
   './privacidad.html',
   './src/css/legal.css',
-  './src/css/styles.css?v=47',
+  './src/css/styles.css?v=48',
   './src/js/theme.js?v=43',
   './src/js/update.js?v=1',
-  './src/js/attendance.js?v=43',
+  './src/js/attendance.js?v=44',
+  './src/js/attendance-ui.js?v=1',
   './src/js/calendar.js?v=43',
-  './src/js/absence-day.js?v=43',
-  './src/js/storage.js?v=43',
+  './src/js/absence-day.js?v=44',
+  './src/js/storage.js?v=44',
   './src/js/schedule.js?v=45',
   './src/js/tasks.js?v=43',
-  './src/js/history.js?v=43',
-  './src/js/recovery.js?v=43',
+  './src/js/history.js?v=44',
+  './src/js/recovery.js?v=44',
   './src/js/push-config.js?v=43',
-  './src/js/account.js?v=45',
+  './src/js/account.js?v=46',
   './src/js/reminders.js?v=44',
-  './src/js/app.js?v=43',
+  './src/js/app.js?v=44',
   './manifest.webmanifest',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png'
