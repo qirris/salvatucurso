@@ -141,6 +141,14 @@
 .sc-turquesa { --sc-bg:#f0fdfa; --sc-border:#99f6e4; --sc-text:#115e59; --sc-dot:#14b8a6; background:var(--sc-bg); }
 .sc-amarillo { --sc-bg:#fefce8; --sc-border:#fef08a; --sc-text:#854d0e; --sc-dot:#eab308; background:var(--sc-bg); }
 .sc-gris { --sc-bg:#f8fafc; --sc-border:#e2e8f0; --sc-text:#334155; --sc-dot:#64748b; background:var(--sc-bg); }
+.sc-rojo { --sc-bg:#fff1f2; --sc-border:#fecdd3; --sc-text:#9f1239; --sc-dot:#e11d48; background:var(--sc-bg); }
+.sc-coral { --sc-bg:#fff0eb; --sc-border:#f8c8b9; --sc-text:#9b3825; --sc-dot:#e76f51; background:var(--sc-bg); }
+.sc-celeste { --sc-bg:#ecf9ff; --sc-border:#bae6fd; --sc-text:#075985; --sc-dot:#0284c7; background:var(--sc-bg); }
+.sc-indigo { --sc-bg:#eef2ff; --sc-border:#c7d2fe; --sc-text:#3730a3; --sc-dot:#4f46e5; background:var(--sc-bg); }
+.sc-lima { --sc-bg:#f7fee7; --sc-border:#d9f99d; --sc-text:#3f6212; --sc-dot:#65a30d; background:var(--sc-bg); }
+.sc-menta { --sc-bg:#ecfdf5; --sc-border:#a7f3d0; --sc-text:#065f46; --sc-dot:#059669; background:var(--sc-bg); }
+.sc-marron { --sc-bg:#f7f0eb; --sc-border:#ddc4b3; --sc-text:#70452f; --sc-dot:#986747; background:var(--sc-bg); }
+.sc-arena { --sc-bg:#faf6ed; --sc-border:#e4d6b7; --sc-text:#725c32; --sc-dot:#a68a54; background:var(--sc-bg); }
 :root[data-theme="dark"] .sc-azul { --sc-bg:#1a3048; --sc-border:#3b648c; --sc-text:#b5d9ff; --sc-dot:#82b6f0; }
 :root[data-theme="dark"] .sc-verde { --sc-bg:#183b30; --sc-border:#376c55; --sc-text:#a6e4bf; --sc-dot:#71ca98; }
 :root[data-theme="dark"] .sc-morado { --sc-bg:#302443; --sc-border:#675080; --sc-text:#d9baf6; --sc-dot:#be97e8; }
@@ -149,6 +157,14 @@
 :root[data-theme="dark"] .sc-turquesa { --sc-bg:#173b3e; --sc-border:#3d7174; --sc-text:#a2e5e1; --sc-dot:#6bceca; }
 :root[data-theme="dark"] .sc-amarillo { --sc-bg:#3b341f; --sc-border:#786b3d; --sc-text:#f1dfa4; --sc-dot:#d7bf68; }
 :root[data-theme="dark"] .sc-gris { --sc-bg:#283645; --sc-border:#596c7f; --sc-text:#d6e0e9; --sc-dot:#a0b2c4; }
+:root[data-theme="dark"] .sc-rojo { --sc-bg:#432330; --sc-border:#905269; --sc-text:#ffbdce; --sc-dot:#fb718f; }
+:root[data-theme="dark"] .sc-coral { --sc-bg:#432b25; --sc-border:#8c5a49; --sc-text:#ffc8b6; --sc-dot:#f49377; }
+:root[data-theme="dark"] .sc-celeste { --sc-bg:#173747; --sc-border:#3e718a; --sc-text:#b3e6ff; --sc-dot:#65c5ef; }
+:root[data-theme="dark"] .sc-indigo { --sc-bg:#292c4d; --sc-border:#5e6596; --sc-text:#c8ceff; --sc-dot:#a5adff; }
+:root[data-theme="dark"] .sc-lima { --sc-bg:#2c3a22; --sc-border:#607d41; --sc-text:#d4eea5; --sc-dot:#acd66f; }
+:root[data-theme="dark"] .sc-menta { --sc-bg:#173b34; --sc-border:#3a7a66; --sc-text:#a3ebd2; --sc-dot:#66d5ae; }
+:root[data-theme="dark"] .sc-marron { --sc-bg:#382d29; --sc-border:#7e6251; --sc-text:#e9cbb5; --sc-dot:#c29b7c; }
+:root[data-theme="dark"] .sc-arena { --sc-bg:#363226; --sc-border:#7d7154; --sc-text:#e9dcb9; --sc-dot:#c8b584; }
 
 /* ============================================================
    SalvaTuCurso — styles.css
@@ -1759,27 +1775,13 @@ body.has-undo .toast { bottom: calc(6rem + var(--safe-bottom)); }
 .sync-actions .btn { flex: 1 1 100%; white-space: normal; }
 
 /* El color elegido para cada asignatura acompaña todas sus clases. */
-.sg-cell.sc-azul,
-.sg-cell.sc-verde,
-.sg-cell.sc-morado,
-.sg-cell.sc-naranja,
-.sg-cell.sc-rosa,
-.sg-cell.sc-turquesa,
-.sg-cell.sc-amarillo,
-.sg-cell.sc-gris {
+.sg-cell[class*="sc-"] {
   background: var(--sc-bg);
   border-color: var(--sc-border);
   color: var(--sc-text);
   box-shadow: none;
 }
-.sg-cell.sc-azul:hover,
-.sg-cell.sc-verde:hover,
-.sg-cell.sc-morado:hover,
-.sg-cell.sc-naranja:hover,
-.sg-cell.sc-rosa:hover,
-.sg-cell.sc-turquesa:hover,
-.sg-cell.sc-amarillo:hover,
-.sg-cell.sc-gris:hover {
+.sg-cell[class*="sc-"]:hover {
   border-color: var(--sc-dot);
   box-shadow: 0 5px 14px color-mix(in srgb, var(--sc-dot) 16%, transparent);
 }
@@ -1803,27 +1805,13 @@ body.has-undo .toast { bottom: calc(6rem + var(--safe-bottom)); }
   border-radius: 12px;
   background: var(--card);
 }
-.schedule-mobile .mobile-class.sc-azul,
-.schedule-mobile .mobile-class.sc-verde,
-.schedule-mobile .mobile-class.sc-morado,
-.schedule-mobile .mobile-class.sc-naranja,
-.schedule-mobile .mobile-class.sc-rosa,
-.schedule-mobile .mobile-class.sc-turquesa,
-.schedule-mobile .mobile-class.sc-amarillo,
-.schedule-mobile .mobile-class.sc-gris {
+.schedule-mobile .mobile-class[class*="sc-"] {
   background: var(--sc-bg);
   border-color: var(--sc-border);
   border-style: solid;
   color: var(--sc-text);
 }
-.schedule-mobile .mobile-class.sc-azul .mc-time,
-.schedule-mobile .mobile-class.sc-verde .mc-time,
-.schedule-mobile .mobile-class.sc-morado .mc-time,
-.schedule-mobile .mobile-class.sc-naranja .mc-time,
-.schedule-mobile .mobile-class.sc-rosa .mc-time,
-.schedule-mobile .mobile-class.sc-turquesa .mc-time,
-.schedule-mobile .mobile-class.sc-amarillo .mc-time,
-.schedule-mobile .mobile-class.sc-gris .mc-time {
+.schedule-mobile .mobile-class[class*="sc-"] .mc-time {
   color: var(--sc-text);
   opacity: .78;
 }
@@ -1838,14 +1826,7 @@ body.has-undo .toast { bottom: calc(6rem + var(--safe-bottom)); }
   border-style: dashed;
 }
 
-.cell-subject.sc-azul,
-.cell-subject.sc-verde,
-.cell-subject.sc-morado,
-.cell-subject.sc-naranja,
-.cell-subject.sc-rosa,
-.cell-subject.sc-turquesa,
-.cell-subject.sc-amarillo,
-.cell-subject.sc-gris {
+.cell-subject[class*="sc-"] {
   background: var(--sc-bg);
   border-color: var(--sc-border);
   color: var(--sc-text);

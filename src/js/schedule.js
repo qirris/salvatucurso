@@ -16,7 +16,8 @@ const DIAS = [
 
 const DIAS_LECTIVOS_DEFAULT = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'];
 
-const PALETA = ['azul', 'verde', 'morado', 'naranja', 'rosa', 'turquesa', 'amarillo', 'gris'];
+const PALETA = ['azul', 'verde', 'morado', 'naranja', 'rosa', 'turquesa', 'amarillo', 'gris',
+  'rojo', 'coral', 'celeste', 'indigo', 'lima', 'menta', 'marron', 'arena'];
 
 const PALETA_LABEL = {
   azul: 'Azul claro',
@@ -26,7 +27,15 @@ const PALETA_LABEL = {
   rosa: 'Rosa',
   turquesa: 'Turquesa',
   amarillo: 'Amarillo',
-  gris: 'Gris'
+  gris: 'Gris',
+  rojo: 'Rojo',
+  coral: 'Coral',
+  celeste: 'Celeste',
+  indigo: 'Índigo',
+  lima: 'Lima',
+  menta: 'Menta',
+  marron: 'Marrón',
+  arena: 'Arena'
 };
 
 const HORARIO_DEFAULT = {

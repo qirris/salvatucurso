@@ -208,8 +208,16 @@ Para mantener una identidad profesional y seria, los mensajes de commit futuros 
 - El horario de escritorio y la vista móvil aplican el color pastel elegido para cada asignatura. Las clases usan superficie, borde, texto y un marcador circular derivados de los ocho tonos, con variantes específicas para claro y oscuro; el nombre sigue visible para no comunicar únicamente mediante color.
 - Corregida la regla móvil que anulaba los fondos de asignatura. Las filas conservan ahora el color, un contraste legible, un área táctil amplia y una edición visualmente integrada.
 - Añadido el aviso «Actualización disponible», con «Actualizar ahora» y «Más tarde». Una versión nueva del service worker queda esperando y solo toma el control cuando la persona lo solicita; después se recarga una vez. La primera instalación no muestra el aviso ni se producen recargas automáticas durante un formulario.
-- Caché actual `salvatucurso-v50`; `styles.css?v=46`, `schedule.js?v=44` y nuevo `update.js?v=1`. README actualizado con el comportamiento de las versiones nuevas.
+- En esa entrega se publicó la caché `salvatucurso-v50`, con `styles.css?v=46`, `schedule.js?v=44` y nuevo `update.js?v=1`. README actualizado con el comportamiento de las versiones nuevas.
 - Añadidas pruebas para los ocho colores y para detectar, aplazar y activar una actualización. Suite completa, compilación y `git diff --check` superados.
 - Publicado en Cloudflare con versión `dd58817c-ac33-42cb-bee7-dcc5a40a6236`. Wrangler confirmó la subida de los recursos nuevos y el despliegue del Worker. No se modificaron D1, cuentas, credenciales, datos académicos, cron ni servicios de pago.
+
+## 16. Paleta de 16 colores para asignaturas
+
+- Añadidos rojo, coral, celeste, índigo, lima, menta, marrón y arena a los ocho tonos originales. Se conservan los identificadores y colores existentes.
+- Cada tono incluye nombre accesible y variables específicas en claro y oscuro. Los estilos compartidos aplican todos los colores a las clases de escritorio y móvil y al selector de clase; tareas y marcadores reutilizan las mismas variables.
+- Verificadas normalización de los 16 valores, etiquetas y contraste mediante las pruebas existentes ampliadas. Suite completa, compilación y simulación de despliegue superadas.
+- Caché actual `salvatucurso-v51`, con `styles.css?v=47` y `schedule.js?v=45`. La app ofrece el aviso de actualización pendiente.
+- Publicado en Cloudflare con versión `62606de3-d651-4757-a18b-5782026a4643`. Commit en español: `funcionalidad: ampliar la paleta de asignaturas a 16 colores`.
 
 

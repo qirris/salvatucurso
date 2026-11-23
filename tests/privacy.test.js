@@ -29,7 +29,7 @@ assert.match(index, /href="privacidad\.html">Privacidad<\/a>/);
 assert.match(build, /'privacidad\.html'/);
 assert.match(worker, /'\.\/privacidad\.html'/);
 assert.match(worker, /'\.\/src\/css\/legal\.css'/);
-assert.match(worker, /salvatucurso-v50/);
+assert.match(worker, /salvatucurso-v51/);
 
 assert.doesNotMatch(page, /client_secret|api[_-]?key|private[_-]?key/i);
 

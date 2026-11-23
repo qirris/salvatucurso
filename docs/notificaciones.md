@@ -67,7 +67,7 @@ En iPhone/iPad se requiere iOS/iPadOS 16.4 o posterior y abrir la app añadida a
 7. Comprobar Google y correo en dos navegadores, sesiones, conflictos, traslado de datos y cambios sin conexión. Instalar en un móvil, activar avisos, enviar una prueba, cerrar la app y verificar una entrega programada.
 8. Mantener Cloudflare como única web publicada y GitHub Pages desactivado con la rama None. El código y su historial se conservan en el repositorio salvatucurso.
 
-Los recursos públicos se construyen con una lista cerrada (index, privacidad, manifest, service worker, src y assets). Las claves privadas, .dev.vars, la base local, node_modules y los archivos del servidor no se incluyen en dist. Las API privadas quedan fuera de la caché de la PWA; tampoco se conservan parámetros de recuperación en las claves de navegación. La caché actual es `salvatucurso-v48`, con `account.js?v=45`, `reminders.js?v=44` y `styles.css?v=44`.
+Los recursos públicos se construyen con una lista cerrada (index, privacidad, manifest, service worker, src y assets). Las claves privadas, .dev.vars, la base local, node_modules y los archivos del servidor no se incluyen en dist. Las API privadas quedan fuera de la caché de la PWA; tampoco se conservan parámetros de recuperación en las claves de navegación. La caché actual es `salvatucurso-v51`, con `account.js?v=45`, `reminders.js?v=44`, `schedule.js?v=45` y `styles.css?v=47`.
 
 ## Pruebas verificadas y pendientes
 
