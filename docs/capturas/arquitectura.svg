@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="650" viewBox="0 0 1180 650" role="img" aria-labelledby="title desc">
+  <title id="title">Arquitectura de SalvaTuCurso</title>
+  <desc id="desc">La PWA conserva el curso localmente. Con una cuenta se conecta al Worker, que gestiona el acceso con Google y los datos en D1. Un cron activa el envío de avisos Web Push al dispositivo.</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#526c7d"/></marker></defs>
+  <rect width="1180" height="650" rx="16" fill="#f5f8f8"/>
+  <g font-family="Segoe UI,Arial,sans-serif" fill="#173856">
+    <text x="38" y="48" font-size="27" font-weight="700">Una aplicación, dos formas de guardar</text>
+    <text x="38" y="78" font-size="17" fill="#526c7d">Sin cuenta: curso local · Con cuenta: sincronización con revisión de cambios</text>
+    <rect x="38" y="126" width="370" height="368" rx="16" fill="#fff" stroke="#cedce3"/>
+    <text x="63" y="164" font-size="19" font-weight="700">Dispositivo</text>
+    <rect x="64" y="187" width="318" height="110" rx="12" fill="#e8f3f3"/>
+    <text x="86" y="222" font-size="21" font-weight="700">Interfaz / PWA</text>
+    <text x="86" y="250" font-size="17">HTML · CSS · JavaScript</text>
+    <text x="86" y="275" font-size="16" fill="#526c7d">Recursos públicos: service worker</text>
+    <path d="M223 305V341" fill="none" stroke="#526c7d" stroke-width="2" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <rect x="64" y="351" width="318" height="112" rx="12" fill="#f0f4f7"/>
+    <text x="86" y="387" font-size="20" font-weight="700">Almacenamiento local</text>
+    <text x="86" y="415" font-size="17">Curso, preferencias y copias</text>
+    <text x="86" y="440" font-size="16" fill="#526c7d">Cambios pendientes sin conexión</text>
+    <rect x="566" y="124" width="260" height="83" rx="12" fill="#fff" stroke="#cedce3"/>
+    <text x="590" y="159" font-size="20" font-weight="700">Google</text>
+    <text x="590" y="186" font-size="17">Inicio de sesión opcional</text>
+    <path d="M696 216V258" stroke="#526c7d" stroke-width="2" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <rect x="566" y="269" width="260" height="111" rx="12" fill="#173856"/>
+    <text x="590" y="307" font-size="21" font-weight="700" fill="#fff">Cloudflare Worker</text>
+    <text x="590" y="337" font-size="17" fill="#d9e7ef">API · Better Auth · Web Push</text>
+    <text x="590" y="362" font-size="16" fill="#d9e7ef">Sesiones y revisiones del curso</text>
+    <path d="M418 264H474V304H550" fill="none" stroke="#526c7d" stroke-width="2" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <text x="434" y="239" font-size="16" fill="#526c7d">Con cuenta</text>
+    <path d="M836 324H916" stroke="#526c7d" stroke-width="2" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <rect x="930" y="269" width="212" height="111" rx="12" fill="#fff" stroke="#cedce3"/>
+    <text x="952" y="307" font-size="21" font-weight="700">D1</text>
+    <text x="952" y="337" font-size="16">Curso, cuentas, copias</text>
+    <text x="952" y="362" font-size="16">y avisos programados</text>
+    <rect x="566" y="451" width="260" height="85" rx="12" fill="#fff0e9"/>
+    <text x="590" y="486" font-size="20" font-weight="700">Cron del servidor</text>
+    <text x="590" y="513" font-size="17">Revisa los avisos cada minuto</text>
+    <path d="M696 440V392" stroke="#526c7d" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M826 360H870V494H916" fill="none" stroke="#526c7d" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="930" y="451" width="212" height="85" rx="12" fill="#fff" stroke="#cedce3"/>
+    <text x="952" y="486" font-size="20" font-weight="700">Servicio Web Push</text>
+    <text x="952" y="513" font-size="17">Entrega al dispositivo</text>
+    <path d="M1036 546V578H223V505" fill="none" stroke="#526c7d" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="436" y="563" width="402" height="29" fill="#f5f8f8"/>
+    <text x="451" y="584" font-size="16" fill="#526c7d">Aviso, incluso con la aplicación cerrada</text>
+    <text x="38" y="628" font-size="15" fill="#526c7d">La sincronización y los avisos necesitan conexión. Las API privadas no se guardan en la caché de la PWA.</text>
+  </g>
+</svg>

@@ -84,7 +84,33 @@ En **Ajustes → Accesibilidad y pantalla** puedes activar **Permitir ampliar co
 
 ## Cuentas y avisos
 
-La [presentación del proyecto](../README.md#dónde-se-guardan-tus-datos) explica dónde se guarda el curso, cómo sincronizarlo y cómo instalar la app. Google está disponible para cualquier cuenta externa.
+La [presentación del proyecto](../README.md#probarla-y-conservar-los-datos) explica dónde se guarda el curso y cómo sincronizarlo. Google está disponible para cualquier cuenta externa.
 
 Para conocer el funcionamiento de las cuentas, los conflictos y los recordatorios, consulta [Cuentas, sincronización y avisos en Cloudflare](notificaciones.md).
+
+Sin cuenta, el curso se conserva en ese navegador y no aparece automáticamente en otro dispositivo. Con Google, se sincronizan asignaturas, tareas, notas, faltas, horario, calendario y configuración académica. Al entrar o encontrar cambios distintos, revisa qué versión conservar; las listas no se mezclan automáticamente. Comprueba el estado de sincronización antes de continuar desde otro dispositivo.
+
+Para guardar o recuperar una copia JSON, entra en **Ajustes → Tu cuenta y tus datos → Copias y traslado de datos**. Si borras los datos del navegador sin cuenta, necesitarás una copia para recuperarlos.
+
+**Eliminar mi cuenta** permite descargar antes una copia y exige escribir **ELIMINAR**. El borrado definitivo retira la cuenta, sus sesiones, el curso, las copias y los avisos de Cloudflare, y reinicia los datos del dispositivo actual. Las copias locales de otros dispositivos no pueden borrarse a distancia, aunque sus sesiones quedan invalidadas.
+
+Con una cuenta y el curso sincronizado, abre **Ajustes → Notificaciones**, elige la antelación y la hora y pulsa **Activar notificaciones**. El permiso se acepta por dispositivo y **Enviar prueba** permite comprobarlo. Se utiliza el último curso sincronizado; los cambios sin conexión no actualizan los avisos hasta enviarse. El navegador, la conexión y el sistema pueden retrasar su recepción.
+
+## Instalar la aplicación
+
+Abre [SalvaTuCurso](https://salvatucurso.qirris.workers.dev) desde el navegador:
+
+- **Android, con Chrome:** pulsa **Instalar aplicación** en Ajustes o utiliza la opción de instalación del menú del navegador.
+- **Ordenador, con Chrome o Edge:** utiliza el icono de instalación de la barra de direcciones o la opción de aplicaciones del menú del navegador, cuando esté disponible.
+- **iPhone, con Safari:** pulsa **Compartir → Añadir a pantalla de inicio** y abre después la app desde su icono. Para recibir notificaciones en iPhone es necesario usar esta instalación.
+
+Abre la app al menos una vez con conexión para que pueda guardar sus recursos públicos. Después podrás consultar y editar el curso local sin conexión. El acceso con Google, la sincronización y los avisos necesitan internet; los cambios locales pendientes se sincronizan al volver a abrir la app con conexión.
+
+La instalación no sustituye una copia de seguridad. Puedes descargar tu curso desde **Ajustes → Tu cuenta y tus datos → Copias y traslado de datos → Descargar copia**.
+
+## Actualizar la aplicación
+
+Cuando haya una versión nueva, aparecerá **Actualización disponible**. Puedes pulsar **Actualizar ahora** o dejarla para más tarde. La app espera tu elección antes de recargar.
+
+En el paso al formato de datos 3 se ofrece descargar la copia anterior antes de continuar. Se conservan los totales existentes, marcados como pendientes de confirmar. Actualiza también la app de tus otros dispositivos antes de sincronizar el formato nuevo.
 

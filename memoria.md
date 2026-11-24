@@ -232,4 +232,14 @@ Para mantener una identidad profesional y seria, los mensajes de commit futuros 
 - Caché actual `salvatucurso-v52`; `attendance-ui.js?v=1`, `attendance.js?v=44`, `storage.js?v=44`, `app.js?v=44`, `account.js?v=46`, `history.js?v=44`, `absence-day.js?v=44`, `recovery.js?v=44`, `styles.css?v=48`.
 - Suite completa, compilación, simulación del Worker y comprobación de diferencias superadas. Publicado en Cloudflare con versión `781586b7-ae9e-498a-b86a-9597777c9804`; la web pública devuelve 200 y entrega el formulario nuevo y el diálogo de migración. No se modificó ningún curso real para probarlo.
 
+## 18. Origen y desarrollo del proyecto en GitHub
+
+- README renovado y caso de estudio en `docs/caso-de-estudio.md`, con la historia confirmada por el usuario: una conversación en clase sobre faltas y evaluación continua llevó a investigar y crear una herramienta; después se incorporaron tareas y exámenes. Presentación en español, sin alusiones a búsqueda de empleo o prácticas.
+- Autoría explicada de forma visible: idea, decisiones funcionales y pruebas de uso del usuario; gran parte del código, pruebas técnicas, documentación y publicación con ayuda de IA, principalmente ChatGPT y Codex. No se atribuye al usuario haber escrito todo el código ni se inventan métricas.
+- Diagrama SVG de arquitectura: PWA y almacenamiento local, acceso opcional con Google, Worker, D1, cron y Web Push. Guía de uso ampliada con instalación en ordenador y móvil, cuentas, copias, avisos y actualización voluntaria.
+- El usuario aportó capturas reales y autorizó usar el horario y los formularios de asignatura y nueva tarea. Se excluyeron Inicio con sus cifras de faltas y Ajustes con su correo. Las tres imágenes se guardan como JPEG sin metadatos personales; no se describen como curso ficticio ni como capturas móviles. Las capturas ficticias de la presentación anterior que no se sustituyeron permanecen como archivos históricos sin enlazar en esta presentación.
+- El caso de estudio distingue las pruebas automatizadas y en DOM de la recepción Push confirmada en móvil. Mantiene pendientes la continuidad de un curso real entre dispositivos, instalación/offline en equipos físicos, icono maskable y revisión visual completa de los formularios recientes.
+- Comprobaciones de esta entrega: suite `npm test`, compilación `npm run build`, enlaces y anclas de los tres documentos, XML del diagrama y revisión de las imágenes y sus metadatos. No se cambia código de la aplicación, formato académico, caché, configuración, cuentas ni datos; no requiere despliegue de Cloudflare. GitHub Pages permanece desactivado.
+- Commit previsto: `documentación: presentar el origen y el desarrollo de SalvaTuCurso`.
+
 

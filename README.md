@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/icons/icon-512.png" alt="Logo de SalvaTuCurso" width="104" height="104">
+  <img src="assets/icons/icon-512.png" alt="Logo de SalvaTuCurso" width="96" height="96">
 </p>
 
 <h1 align="center">SalvaTuCurso</h1>
@@ -7,117 +7,54 @@
 <p align="center">Tus faltas, horario y tareas en un solo lugar.</p>
 
 <p align="center">
-  <a href="https://salvatucurso.qirris.workers.dev"><strong>Abrir SalvaTuCurso</strong></a>
-  · <a href="#instalar-en-el-móvil">Instalar en el móvil</a>
+  <a href="https://salvatucurso.qirris.workers.dev"><strong>Abrir la aplicación</strong></a>
+  · <a href="docs/caso-de-estudio.md">Origen y desarrollo</a>
   · <a href="docs/guia-de-uso.md">Guía de uso</a>
-  · <a href="https://salvatucurso.qirris.workers.dev/privacidad.html">Privacidad</a>
 </p>
 
-SalvaTuCurso te ayuda a organizar el curso: consulta tu próxima clase, prepara los exámenes y lleva un registro de tus faltas. Está pensada para estudiantes de ESO, Bachillerato y Formación Profesional de Andalucía y se adapta al móvil, la tablet y el ordenador.
+SalvaTuCurso es una aplicación web instalable para organizar el curso y llevar un registro de ausencias. Reúne horario, asignaturas, exámenes y tareas, con cálculos orientativos de asistencia adaptados a ESO, Bachillerato y Formación Profesional presencial en Andalucía.
 
-> **Estado actual:** la app se puede usar sin cuenta o iniciar sesión con cualquier cuenta de Google. La sincronización entre dispositivos y los avisos con la app cerrada están activos. El registro con correo y contraseña sigue aplazado para mantener el servicio gratuito.
+![SalvaTuCurso en escritorio: horario semanal en modo oscuro con colores por asignatura y una franja de recreo](docs/capturas/horario-escritorio.jpg)
 
-## Así se ve
+## Por qué creé SalvaTuCurso
 
-Inicio reúne la próxima clase, la entrega más cercana y el resumen de asistencia.
+La idea surgió un día en clase, al escuchar a mis compañeros discutir cuánto podían faltar antes de perder la evaluación continua. Me puse a investigar la normativa y no encontré una herramienta que me sirviera para reunir las reglas y llevar ese seguimiento. Decidí crearla.
 
-![Inicio de SalvaTuCurso en un ordenador, con la próxima clase y un examen cercano](docs/capturas/inicio-escritorio.jpg)
+Después incorporé los exámenes y las tareas: quería poder consultar las faltas y organizar el trabajo del curso desde el mismo sitio. El proyecto fue creciendo a partir de esas necesidades y de las pruebas de uso en el móvil.
 
-<table>
-  <tr>
-    <th>Tu horario semanal</th>
-    <th>Mis tareas en el móvil</th>
-  </tr>
-  <tr>
-    <td valign="top"><img src="docs/capturas/horario-escritorio.jpg" alt="Horario semanal con asignaturas, recreo y resumen de horas" width="650"></td>
-    <td valign="top"><img src="docs/capturas/tareas-movil-oscuro.jpg" alt="Tareas y exámenes en modo oscuro, con navegación inferior en el móvil" width="270"></td>
-  </tr>
-</table>
+## Qué permite hacer
 
-Las capturas muestran un curso ficticio preparado para esta presentación. No contienen datos personales ni información de una cuenta real.
+| Asistencia | Organización | Continuidad |
+| --- | --- | --- |
+| Registrar faltas manuales o por clases de un día. | Consultar el horario y sus asignaturas por colores. | Usar la app sin cuenta o entrar con Google. |
+| Distinguir horas estimadas y confirmadas y guardar criterios del centro. | Preparar exámenes, entregas y notas. | Sincronizar el curso con revisión de cambios. |
+| Revisar el historial y recuperar borrados con Deshacer. | Configurar vacaciones y días sin clase. | Descargar copias y recibir avisos con la app cerrada. |
 
-## Qué puedes hacer
+Las capturas de esta presentación las he tomado de la aplicación real en escritorio. Muestran el horario y los formularios de asignaturas y tareas; se han excluido las pantallas con el correo de la cuenta y las cifras de faltas. El [caso de estudio](docs/caso-de-estudio.md) incluye las otras capturas y explica las decisiones, las comprobaciones y las limitaciones actuales.
 
-| Función | Para qué sirve |
-| --- | --- |
-| **Inicio** | Ver la clase actual o siguiente, las entregas cercanas y el estado de asistencia. |
-| **Asignaturas** | Organizar las materias y sus colores, estimar horas con semanas editables o introducir el total confirmado por ti. |
-| **Horario** | Preparar la semana, cambiar una clase, marcar recreos y copiar un día a otros. En móvil puedes consultarlo por días. |
-| **Mis tareas** | Anotar deberes, exámenes, trabajos, proyectos y notas; filtrar las actividades y marcar lo completado. |
-| **Faltas** | Registrar una ausencia manual o seleccionar las clases completas que perdiste en un día. La app calcula su duración y avisa de posibles coincidencias. |
-| **Historial** | Consultar las faltas en un calendario mensual, revisar sus detalles y editarlas. |
-| **Calendario del curso** | Indicar las fechas del curso, los festivos y las vacaciones para que Inicio respete los días sin clase. |
-| **Apariencia** | Elegir tema automático, claro u oscuro. |
+## Cómo se ha construido
 
-También puedes recuperar durante unos segundos tareas o faltas con **Deshacer**, descargar copias de seguridad e instalar la app para utilizarla sin conexión después de haberla abierto con internet.
+La interfaz utiliza **HTML, CSS y JavaScript sin framework**. El funcionamiento instalable y sin conexión se apoya en un **service worker**. Las cuentas, el curso sincronizado y los avisos se gestionan con **Cloudflare Workers, D1, Better Auth y Web Push**.
 
-Cuando se publica una versión nueva, SalvaTuCurso muestra **Actualización disponible**. Puedes aplicarla con **Actualizar ahora** o dejarla para más tarde; la app nunca interrumpe lo que estás haciendo con una recarga automática.
+![Arquitectura de SalvaTuCurso: almacenamiento local y conexión al Worker para Google, D1 y avisos programados](docs/capturas/arquitectura.svg)
 
-En móvil, la barra inferior da acceso a **Inicio, Mis tareas, Horario, Faltas y Más**. Dentro de **Más** están Asignaturas, Historial y Ajustes.
+### Mi participación y el uso de IA
 
-La asistencia se presenta mediante **ausencias sobre el total previsto**. Puedes empezar con una estimación de horas semanales por semanas (30 inicialmente, editables). El indicador rojo de **Ajustes** señala las asignaturas cuyas horas o criterios del centro siguen pendientes. Encontrarás ayuda para consultar la programación didáctica o preguntar a tutoría. Las cifras estimadas son orientativas; el centro determina la aplicación de sus reglas y el procedimiento de evaluación.
+Es un proyecto personal desarrollado con uso intensivo de IA, principalmente mediante ChatGPT y Codex. **Gran parte del código fue generada por la IA**, que también ayudó con las pruebas automatizadas, la documentación y la publicación.
 
-En la primera actualización al formato de datos 3 puedes descargar una copia anterior antes de continuar. La app conserva los totales existentes y los marca pendientes de confirmar. Actualiza también la app de tus otros dispositivos antes de sincronizar el formato nuevo.
+Mi aportación ha sido detectar la necesidad, definir las funciones, decidir cómo debía comportarse la aplicación, solicitar cambios y probarla como usuario. Por ejemplo, propuse la navegación inferior en móvil, el registro de faltas desde el horario y los avisos de exámenes y tareas. También probé en mi móvil la recepción de notificaciones con la app cerrada.
 
-## Primeros pasos
+El [proceso de desarrollo](docs/caso-de-estudio.md#cómo-he-trabajado-con-ia) recoge esta colaboración y distingue las pruebas personales de las comprobaciones automatizadas.
 
-1. [Abre la app](https://salvatucurso.qirris.workers.dev) y elige tu etapa educativa.
-2. Añade tus asignaturas y sus horas planificadas.
-3. Coloca las clases en **Horario**. Si lo necesitas, configura festivos y vacaciones en **Ajustes → Calendario del curso**.
-4. Añade tus entregas en **Mis tareas** y registra las ausencias desde **Faltas**.
+## Probarla y conservar los datos
 
-Inicio incluye una guía opcional para preparar el curso. Puedes continuar después y volver a ella desde Ajustes.
+Puedes [abrir SalvaTuCurso](https://salvatucurso.qirris.workers.dev) sin crear una cuenta. Sin sesión, el curso se guarda en ese navegador; con Google, se sincroniza con Cloudflare y mantiene una copia local. Antes de sustituir versiones distintas se pide revisarlas.
 
-## Instalar en el móvil
+La app permite descargar e importar copias JSON y eliminar la cuenta desde Ajustes. La apariencia y los permisos de notificaciones se eligen por dispositivo. Consulta la [política de privacidad](https://salvatucurso.qirris.workers.dev/privacidad.html) y la [guía de uso](docs/guia-de-uso.md).
 
-La app se instala desde el navegador; no necesitas descargarla de una tienda.
+Para instalarla, utiliza la opción de instalación de Chrome en Android o escritorio. En iPhone, abre Safari y selecciona **Compartir → Añadir a pantalla de inicio**. La [guía de instalación](docs/guia-de-uso.md#instalar-la-aplicación) incluye los pasos y las condiciones de uso sin conexión.
 
-**Android con Chrome:** abre [SalvaTuCurso](https://salvatucurso.qirris.workers.dev), entra en **Más → Ajustes → Instalar la aplicación** y pulsa **Instalar aplicación**. Si el navegador no muestra el aviso, usa su menú **Instalar y crear acceso directo → Instalar**. [Ayuda de Chrome](https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DAndroid&hl=es).
-
-**iPhone:** abre [SalvaTuCurso](https://salvatucurso.qirris.workers.dev) en Safari, pulsa **Compartir → Añadir a pantalla de inicio** y confirma. Después ábrela desde su icono. Si aparece la opción **Abrir como app web**, déjala activada. [Ayuda de Apple](https://support.apple.com/es-es/guide/iphone/iph42ab2f3a7/ios).
-
-## Dónde se guardan tus datos
-
-| Cómo usas la app | Dónde se guarda el curso |
-| --- | --- |
-| **Sin cuenta** | En ese dispositivo y navegador. No aparece automáticamente en otro móvil u ordenador. |
-| **Con una cuenta de Google** | En Cloudflare y en una copia local del navegador para seguir trabajando sin conexión. La misma cuenta permite compartir el curso entre dispositivos. |
-
-La sincronización incluye asignaturas, tareas y notas, faltas, horario, calendario y configuración académica. El tema, el zoom y los ajustes de avisos se eligen por dispositivo.
-
-Al iniciar sesión con datos ya existentes, puedes revisar qué versión conservar: la del dispositivo o la de la cuenta. Las listas no se mezclan automáticamente. Si dos dispositivos guardan cambios distintos, la app pide revisarlos antes de sustituirlos.
-
-Sin internet puedes seguir usando el curso guardado. Los cambios pendientes se envían cuando vuelve la conexión y la app está abierta. Comprueba el estado de sincronización antes de continuar desde otro dispositivo.
-
-Para guardar una copia, entra en **Más → Ajustes → Tu cuenta y tus datos → Copias y traslado de datos → Descargar copia**. Puedes recuperarla con **Importar copia**. Si usas la app sin cuenta y borras los datos del navegador, necesitarás una copia para recuperarlos.
-
-Si ya no quieres conservar tu cuenta, entra en **Más → Ajustes → Tu cuenta y tus datos → Eliminar mi cuenta**. Antes puedes descargar una copia JSON. La eliminación retira definitivamente de Cloudflare la cuenta, sus sesiones, el curso, las copias y los avisos, y reinicia los datos del dispositivo actual. Las copias locales de otros dispositivos no se pueden borrar a distancia, aunque sus sesiones quedan invalidadas.
-
-GitHub contiene el código, la documentación y las capturas de ejemplo. Los cursos de las cuentas se guardan en Cloudflare, separados del repositorio. Las claves privadas no forman parte del código público.
-
-## Avisos de exámenes y entregas
-
-Con una cuenta de Google y el curso sincronizado, ve a **Más → Ajustes → Notificaciones**, elige la antelación y la hora, pulsa **Activar notificaciones** y acepta el permiso en ese dispositivo. **Enviar prueba** permite comprobar la recepción.
-
-Los avisos se programan en el servidor y pueden llegar aunque la app esté cerrada. En iPhone e iPad requieren iOS/iPadOS 16.4 o posterior y abrir la app desde la pantalla de inicio. [Compatibilidad de Web Push en iOS y iPadOS](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
-
-Se usa la última versión del curso sincronizada: un cambio sin conexión no actualiza los recordatorios del servidor hasta enviarse. Los permisos, la conexión y el sistema del móvil pueden retrasar un aviso.
-
-## Para desarrollar
-
-La interfaz usa **HTML, CSS y JavaScript**, con un service worker para el funcionamiento sin conexión. Las cuentas, la sincronización y los avisos usan **Cloudflare Workers, D1, Better Auth y Web Push**.
-
-### Revisar la interfaz localmente
-
-Desde la carpeta del proyecto, con Python instalado:
-
-```bash
-python -m http.server 8080 --bind 127.0.0.1
-```
-
-Abre `http://localhost:8080`. Esta ejecución estática permite revisar la interfaz y el guardado local; las cuentas y los avisos necesitan el servidor de Cloudflare. Abrir `index.html` directamente no permite comprobar la instalación ni el funcionamiento sin conexión de la PWA.
-
-### Pruebas y preparación
+## Ejecutar y comprobar el proyecto
 
 Con Node.js y npm instalados:
 
@@ -127,32 +64,25 @@ npm test
 npm run build
 ```
 
-Las pruebas cubren asistencia, temas, calendario, horario, tareas, faltas, recuperación, cuentas y recordatorios. La integración usa servicios locales de prueba, sin enviar correos ni avisos reales. La preparación genera `dist/` con una lista cerrada de recursos públicos.
+Las pruebas cubren cálculos, calendario, edición del horario, faltas, migración, sincronización, aislamiento de cuentas y recordatorios. Las pruebas del servidor utilizan servicios locales simulados, sin enviar correos ni notificaciones reales.
 
-Para trabajar con el Worker, usa `npm run dev`. Consulta antes la [documentación de Cloudflare](docs/notificaciones.md) para conocer las variables, las migraciones y las condiciones de publicación. Conserva las credenciales fuera del repositorio.
+Para revisar la interfaz y el guardado local, sirve la carpeta con un servidor estático; por ejemplo, con Python:
 
-```text
-salvatucurso/
-├── assets/icons/       # Logo e iconos de instalación
-├── cloudflare/         # Servidor y migraciones de la base de datos
-├── docs/               # Guía, capturas y documentación de Cloudflare
-├── src/css/            # Estilos y temas
-├── src/js/             # Interfaz, datos y sincronización
-├── tests/              # Pruebas
-├── index.html
-├── privacidad.html     # Política pública de privacidad
-├── manifest.webmanifest
-└── service-worker.js
+```bash
+python -m http.server 8080 --bind 127.0.0.1
 ```
 
-## Documentación y alcance
+Abre `http://localhost:8080`. Las cuentas y los avisos necesitan el Worker; esta ejecución estática conserva el modo local. Para desarrollar el servidor, utiliza `npm run dev` y consulta antes la [configuración de Cloudflare](docs/notificaciones.md). Las credenciales se mantienen fuera del repositorio.
 
-- [Guía de uso: clases, calendario, faltas y recuperación](docs/guia-de-uso.md).
-- [Cuentas, sincronización, avisos y publicación en Cloudflare](docs/notificaciones.md).
-- [Política de privacidad](https://salvatucurso.qirris.workers.dev/privacidad.html).
-- [Fuentes sobre evaluación continua en Andalucía](docs/referencia-normativa-evaluacion-continua-andalucia.txt).
+## Estado y documentación
 
-**Cloudflare es la única web publicada.** GitHub Pages está desactivado. Google está en producción para usuarios externos y solicita únicamente nombre, correo e imagen de perfil. El registro con correo y contraseña continúa aplazado.
+La aplicación está publicada en Cloudflare y permite acceso con Google. El registro con correo y contraseña está aplazado. Entre las comprobaciones pendientes están la continuidad de un mismo curso en dos dispositivos y la instalación y el funcionamiento sin conexión en distintos dispositivos físicos.
 
-SalvaTuCurso es una herramienta informativa. Los indicadores de asistencia no determinan si apruebas o suspendes y no sustituyen al centro educativo ni a la normativa oficial. Consulta los criterios de tu centro y las fuentes enlazadas en Ajustes.
+- [Caso de estudio: origen, decisiones y desarrollo](docs/caso-de-estudio.md).
+- [Guía de uso e instalación](docs/guia-de-uso.md).
+- [Cuentas, sincronización, avisos y publicación](docs/notificaciones.md).
+- [Comprobaciones pendientes](instrucciones/TAREAS_PENDIENTES.md).
+- [Referencias sobre evaluación continua en Andalucía](docs/referencia-normativa-evaluacion-continua-andalucia.txt).
+
+Los indicadores de asistencia son orientativos y no determinan si apruebas o suspendes. La aplicación distingue las estimaciones de los datos confirmados por la persona y remite a los criterios del centro. Cloudflare es la única web publicada; GitHub Pages está desactivado.
 
