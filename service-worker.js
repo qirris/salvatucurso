@@ -1,27 +1,27 @@
 /* Service Worker — SalvaTuCurso
    Cachea los recursos esenciales para funcionar sin conexión. */
 
-const CACHE_VERSION = 'salvatucurso-v52';
+const CACHE_VERSION = 'salvatucurso-v54';
 const APP_SHELL = [
   './index.html',
   './privacidad.html',
   './src/css/legal.css',
-  './src/css/styles.css?v=48',
+  './src/css/styles.css?v=49',
   './src/js/theme.js?v=43',
   './src/js/update.js?v=1',
   './src/js/attendance.js?v=44',
-  './src/js/attendance-ui.js?v=1',
+  './src/js/attendance-ui.js?v=2',
   './src/js/calendar.js?v=43',
   './src/js/absence-day.js?v=44',
-  './src/js/storage.js?v=44',
+  './src/js/storage.js?v=45',
   './src/js/schedule.js?v=45',
-  './src/js/tasks.js?v=43',
+  './src/js/tasks.js?v=44',
   './src/js/history.js?v=44',
-  './src/js/recovery.js?v=44',
+  './src/js/recovery.js?v=45',
   './src/js/push-config.js?v=43',
-  './src/js/account.js?v=46',
-  './src/js/reminders.js?v=44',
-  './src/js/app.js?v=44',
+  './src/js/account.js?v=47',
+  './src/js/reminders.js?v=45',
+  './src/js/app.js?v=45',
   './manifest.webmanifest',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png'
@@ -69,16 +69,20 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (req.mode === 'navigate') {
+    const privacyPath = new URL('./privacidad.html', self.registration.scope).pathname;
+    const navigationPage = requestURL.pathname === privacyPath ? './privacidad.html' : './index.html';
+    const publicNavigation = requestURL.pathname === privacyPath || requestURL.pathname === new URL('./', self.registration.scope).pathname ||
+      requestURL.pathname === new URL('./index.html', self.registration.scope).pathname;
     event.respondWith(
       fetch(req).then((res) => {
-        if (res.ok) {
+        if (res.ok && publicNavigation) {
           const copy = res.clone();
           // Conservar solo la página pública, sin tokens ni parámetros en la clave.
-          caches.open(CACHE_VERSION).then(cache => cache.put('./index.html', copy)).catch(() => {});
+          event.waitUntil(caches.open(CACHE_VERSION).then(cache => cache.put(navigationPage, copy)).catch(() => {}));
         }
         return res;
       }).catch(async () => {
-        const cached = await caches.match(req) || await caches.match('./index.html');
+        const cached = await caches.match(navigationPage);
         // Algunos alojamientos redirigen index.html a /. Convertir la copia evita
         // devolver una respuesta marcada como redirigida en una navegación offline.
         return cached && new Response(cached.body, { status: cached.status, statusText: cached.statusText, headers: cached.headers });

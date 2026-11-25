@@ -1,6 +1,6 @@
 # Tareas pendientes de SalvaTuCurso
 
-Estado actualizado el 23/11/2026. Repositorio: <https://github.com/qirris/salvatucurso>. La única web publicada es <https://salvatucurso.qirris.workers.dev>; GitHub Pages permanece desactivado.
+Estado actualizado el 25/11/2026. Repositorio: <https://github.com/qirris/salvatucurso>. La única web publicada es <https://salvatucurso.qirris.workers.dev>; GitHub Pages permanece desactivado.
 
 ## Completado
 
@@ -12,6 +12,7 @@ Estado actualizado el 23/11/2026. Repositorio: <https://github.com/qirris/salvat
 - [x] Política de privacidad pública y eliminación definitiva de la cuenta desde Ajustes.
 - [x] GitHub Pages retirado y repositorio renombrado a `qirris/salvatucurso`.
 - [x] Horas estimadas o confirmadas, criterios documentados por asignatura y migración protegida al formato 3; pruebas automáticas y de formularios sobre HTML real.
+- [x] Formato 4, tareas generales, Papelera recuperable y API de tareas para integraciones privadas, con pruebas de aislamiento y guardado atómico.
 
 ## Comprobaciones reales pendientes
 
@@ -21,7 +22,7 @@ Estado actualizado el 23/11/2026. Repositorio: <https://github.com/qirris/salvat
 - [ ] Comprobar manualmente la descarga e importación JSON entre navegadores y entre versiones.
 - [ ] Verificar con datos de prueba la migración desde `asistenciaData` y formatos anteriores.
 - [ ] Recorrer las operaciones habituales: añadir, editar, archivar y eliminar asignaturas; registrar, editar y deshacer faltas; crear y completar tareas; cambiar clases y periodos no lectivos.
-- [ ] Revisión visual de los nuevos formularios de horas/criterios en claro y oscuro a 320, 390, 768 y 1280 px, con teclado y poca altura. En esta entrega el navegador de pruebas no pudo acceder al servidor local.
+- [ ] Revisión visual de los formularios de horas/criterios en claro y oscuro a 320, 390, 768 y 1280 px, con teclado y poca altura. Quedó pendiente de su entrega; la revisión posterior de tareas y Papelera a 320/390 px no la sustituye.
 
 ## Decisiones vigentes
 

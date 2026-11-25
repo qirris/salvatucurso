@@ -36,7 +36,7 @@ const mails = [], background = [];
 const env = { DB: db, APP_ORIGIN: 'http://localhost:8787', BETTER_AUTH_SECRET: randomBytes(40).toString('base64url'),
   AUTH_EMAIL_ENABLED: 'true', EMAIL_FROM: 'pruebas@example.test', EMAIL: { async send(email) { mails.push(email); } } };
 const ctx = { waitUntil(promise) { background.push(promise); } };
-async function call(path, method = 'GET', body, cookie = '', origin = env.APP_ORIGIN, dataVersion = '3') {
+async function call(path, method = 'GET', body, cookie = '', origin = env.APP_ORIGIN, dataVersion = '4') {
   const response = await worker.fetch(new Request(env.APP_ORIGIN + path, { method,
     headers: { Origin: origin, 'Content-Type': 'application/json', Cookie: cookie, 'cf-connecting-ip': '127.0.0.1', 'X-SalvaTuCurso-Data-Version': dataVersion },
     body: body === undefined ? undefined : JSON.stringify(body) }), env, ctx);
@@ -77,11 +77,12 @@ try {
   const before = await call('/api/course'); assert.equal(before.status, 401);
   assert.equal((await (await call('/api/course', 'GET', undefined, a.cookie)).json()).state, null);
   const due = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-  const course = { version: 3, etapa: 'fp_superior', asignaturas: [{ id: 'a', nombre: 'Redes', archivada: false, horasTotales: 120, computo: { origen: 'estimado', referencia: '', inicio: '' }, criterio: null }],
+  const course = { version: 4, etapa: 'fp_superior', asignaturas: [{ id: 'a', nombre: 'Redes', archivada: false, horasTotales: 120, computo: { origen: 'estimado', referencia: '', inicio: '' }, criterio: null }],
     tareas: [{ id: 't', asignaturaId: 'a', titulo: 'Examen de redes', tipo: 'examen', estado: 'pendiente', fechaEntrega: due }],
     faltas: [{ id: 'f', asignaturaId: 'a', fecha: '2026-11-12', horas: 1, procedencia: 'sin_especificar' }], config: { criterio: null, onboarding: { oculto: true } }, horario: null };
   assert.equal((await call('/api/course', 'GET', undefined, a.cookie, env.APP_ORIGIN, '')).status, 426, 'un cliente antiguo no lee el nuevo curso');
   assert.equal((await call('/api/course', 'PUT', { revision: null, state: course }, a.cookie, env.APP_ORIGIN, '2')).status, 426, 'un cliente antiguo no sustituye los datos nuevos');
+  assert.equal((await call('/api/course', 'GET', undefined, a.cookie, env.APP_ORIGIN, '3')).status, 426, 'el cliente V3 no puede descartar tareas generales ni reactivar la Papelera');
   assert.equal((await call('/api/course', 'PUT', { revision: null, state: { ...course, asignaturas: [{ id: 'a' }] } }, a.cookie)).status, 400, 'rechaza formato nuevo incompleto antes de guardar');
   let result = await call('/api/course', 'PUT', { revision: null, state: course }, a.cookie);
   assert.equal(result.status, 200); let revision = (await result.json()).revision;
@@ -164,5 +165,104 @@ try {
   const london = inZone('2026-03-30', '18:00', 'Europe/London'); assert.equal(new Date(london).toISOString(), '2026-03-30T17:00:00.000Z');
   const madrid = inZone('2026-10-26', '18:00', 'Europe/Madrid'); assert.equal(new Date(madrid).toISOString(), '2026-10-26T17:00:00.000Z');
   assert.equal(jobsForCourse({ ...course, tareas: [{ ...course.tareas[0], estado: 'completada' }] }, { examDays: 3, taskDays: 1, time: '18:00' }, 'Europe/Madrid').length, 0);
+  // Integración privada: únicamente tareas y salud, sin cookies ni datos de identidad en las respuestas.
+  const owner = db.sqlite.prepare('SELECT id FROM "user" WHERE email=?').get(a.email).id;
+  env.JARVIS_KEY = randomBytes(32).toString('hex'); env.JARVIS_USER_ID = owner;
+  const clearLimits = () => db.sqlite.prepare('DELETE FROM "rateLimit"').run();
+  clearLimits();
+  const privateCall = (path, method = 'GET', body, { key = env.JARVIS_KEY, cookie = '', origin } = {}) => worker.fetch(new Request(env.APP_ORIGIN + path, {
+    method, headers: { ...(key === null ? {} : { 'X-Jarvis-Key': key }), ...(cookie ? { Cookie: cookie } : {}),
+      ...(origin === undefined ? {} : { Origin: origin }), ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
+    body: body === undefined ? undefined : JSON.stringify(body)
+  }), env, ctx);
+  assert.equal((await privateCall('/api/jarvis/health', 'GET', undefined, { key: null, cookie: b.cookie })).status, 401);
+  for (const key of [null, '', 'incorrecta', 'a'.repeat(1025), env.JARVIS_KEY.slice(0, -1)])
+    assert.equal((await privateCall('/api/tareas', 'GET', undefined, { key })).status, 401);
+  result = await privateCall('/api/jarvis/health');
+  assert.equal(result.status, 200); assert.deepEqual(await result.json(), { ok: true });
+  assert.equal(result.headers.get('Cache-Control'), 'no-store'); assert.equal(result.headers.get('Access-Control-Allow-Origin'), null);
+  assert.equal((await privateCall('/api/jarvis/health', 'POST')).status, 405);
+  assert.equal((await privateCall('/api/tareas', 'POST', { titulo: 'Local' }, { origin: 'https://otro.example' })).status, 403);
+  assert.equal((await privateCall('/api/course')).status, 401, 'la clave no permite leer el curso');
+  assert.ok([401,403].includes((await privateCall('/api/account', 'DELETE', { confirmation: 'ELIMINAR' })).status));
+  assert.ok([401,403].includes((await privateCall('/api/push', 'POST', {})).status));
+  const otherTasks = await privateCall('/api/tareas', 'GET', undefined, { key: 'incorrecta', cookie: b.cookie });
+  assert.equal(otherTasks.status, 200); assert.deepEqual(await otherTasks.json(), { tareas: [] }, 'la sesión web usa su propia cuenta');
+  assert.equal((await privateCall('/api/tareas', 'POST', { titulo: 'Sin origen' }, { key: null, cookie: b.cookie })).status, 403);
+  assert.equal((await privateCall('/api/tareas', 'GET', undefined, { key: null, cookie: b.cookie, origin: env.APP_ORIGIN })).status, 200);
+  assert.equal((await privateCall('/api/tareas', 'POST', { titulo: 'Solo web' }, { key: null, cookie: b.cookie, origin: env.APP_ORIGIN })).status, 201);
+  for (const body of [null, [], {}, { titulo: '' }, { titulo: ' '.repeat(10) }, { titulo: 'a'.repeat(201) },
+    { titulo: 'A', prioridad: 'urgente' }, { titulo: 'A', fecha: '2027-02-29' }, { titulo: 'A', fecha: null }, { titulo: 'A', userId: owner }])
+    assert.equal((await privateCall('/api/tareas', 'POST', body)).status, 400);
+  clearLimits();
+  const untouched = JSON.parse(db.sqlite.prepare('SELECT state FROM courses WHERE user_id=?').get(owner).state);
+  db.sqlite.prepare('INSERT INTO push_devices(id,user_id,subscription,prefs,timezone,updated_at) VALUES(?,?,?,?,?,?)').run(crypto.randomUUID(), owner,
+    JSON.stringify(subscription), JSON.stringify({ examDays: 3, taskDays: 1, time: '18:00' }), 'Europe/Madrid', Date.now());
+  result = await privateCall('/api/tareas', 'POST', { titulo: '  Preparar material  ', prioridad: 'alta', fecha: due });
+  assert.equal(result.status, 201);
+  const created = await result.json();
+  assert.deepEqual(Object.keys(created).sort(), ['estado','fecha','id','prioridad','titulo']);
+  assert.equal(created.titulo, 'Preparar material'); assert.equal(created.estado, 'pendiente'); assert.equal(created.fecha, due);
+  const savedCourse = () => JSON.parse(db.sqlite.prepare('SELECT state FROM courses WHERE user_id=?').get(owner).state);
+  assert.equal(savedCourse().version, 4);
+  for (const field of ['asignaturas','faltas','config','horario']) assert.deepEqual(savedCourse()[field], untouched[field]);
+  const newTask = savedCourse().tareas.find(t => t.id === created.id);
+  assert.equal(newTask.asignaturaId, ''); assert.equal(newTask.slotKey, ''); assert.equal(newTask.tipo, 'otros');
+  const scheduledCount = () => db.sqlite.prepare("SELECT count(*) AS n FROM push_jobs WHERE json_extract(payload,'$.taskId')=? AND status<>'sent'").get(created.id).n;
+  assert.equal(scheduledCount(), 1, 'una tarea general con fecha programa su aviso');
+  for (const estado of ['completada','pendiente','eliminada','pendiente']) {
+    result = await privateCall('/api/tareas/' + created.id, 'PATCH', { estado });
+    assert.equal(result.status, 200); assert.equal((await result.json()).estado, estado);
+    assert.deepEqual(savedCourse().tareas.find(t => t.id === created.id), { ...newTask, estado });
+    assert.equal(scheduledCount(), estado === 'pendiente' ? 1 : 0);
+  }
+  for (const body of [{ estado: 'otra' }, {}, { estado: 'pendiente', titulo: 'Reemplazar' }])
+    assert.equal((await privateCall('/api/tareas/' + created.id, 'PATCH', body)).status, 400);
+  assert.equal((await privateCall('/api/tareas/no-existe', 'PATCH', { estado: 'eliminada' })).status, 404);
+  assert.equal((await privateCall('/api/tareas/' + created.id, 'PATCH', { estado: 'eliminada' }, { key: null, cookie: b.cookie, origin: env.APP_ORIGIN })).status, 404);
+  await privateCall('/api/tareas/' + created.id, 'PATCH', { estado: 'eliminada' });
+  const list = await (await privateCall('/api/tareas?userId=otra-cuenta')).json();
+  assert.equal(list.tareas.find(t => t.id === created.id).estado, 'eliminada');
+  assert.ok(!JSON.stringify(list).includes(owner) && !JSON.stringify(list).includes(env.JARVIS_KEY));
+  assert.deepEqual(await (await privateCall('/api/tareas', 'GET', undefined, { cookie: b.cookie })).json(), list, 'una clave válida tiene prioridad sobre una cookie de otra cuenta');
+  const exposedConfig = JSON.stringify(await publicConfig(env));
+  assert.ok(!exposedConfig.includes(env.JARVIS_KEY) && !exposedConfig.includes(owner) && !exposedConfig.includes('JARVIS_USER_ID'));
+  const unchangedRevision = db.sqlite.prepare('SELECT revision FROM courses WHERE user_id=?').get(owner).revision;
+  await privateCall('/api/tareas/' + created.id, 'PATCH', { estado: 'eliminada' });
+  assert.equal(db.sqlite.prepare('SELECT revision FROM courses WHERE user_id=?').get(owner).revision, unchangedRevision, 'PATCH repetido es idempotente');
+  const footprintTask = () => JSON.stringify(['courses','course_backups','push_jobs'].map(table => db.sqlite.prepare('SELECT * FROM ' + table + ' ORDER BY rowid').all()));
+  const beforeTaskFailure = footprintTask(); db.failSQL = 'INSERT INTO course_backups';
+  assert.equal((await privateCall('/api/tareas', 'POST', { titulo: 'Fallo atómico', fecha: due })).status, 503);
+  assert.equal(footprintTask(), beforeTaskFailure, 'el fallo conserva curso, copias y avisos');
+  const originalBatch = db.batch.bind(db);
+  db.batch = async statements => {
+    db.batch = originalBatch;
+    const changed = savedCourse(); changed.config.concurrente = true;
+    db.sqlite.prepare('UPDATE courses SET revision=?,state=? WHERE user_id=?').run('cambio-paralelo', JSON.stringify(changed), owner);
+    return originalBatch(statements);
+  };
+  assert.equal((await privateCall('/api/tareas', 'POST', { titulo: 'No debe sustituir el curso' })).status, 409);
+  assert.equal(savedCourse().config.concurrente, true); assert.ok(!savedCourse().tareas.some(t => t.titulo === 'No debe sustituir el curso'));
+  const legacy = { ...course, version: 3, tareas: [{ ...course.tareas[0], slotKey: 'lunes|h1', dia: 'lunes', horaInicio: '08:00', horaFin: '09:00' }] };
+  db.sqlite.prepare('UPDATE courses SET state=?,revision=? WHERE user_id=?').run(JSON.stringify(legacy), 'curso-v3', owner);
+  assert.equal((await privateCall('/api/tareas')).status, 200);
+  assert.equal(savedCourse().version, 3, 'leer no modifica el curso antiguo');
+  assert.equal((await privateCall('/api/tareas/t', 'PATCH', { estado: 'completada' })).status, 200);
+  assert.equal(savedCourse().version, 4);
+  assert.deepEqual(savedCourse().tareas[0], { ...legacy.tareas[0], estado: 'completada' }, 'conserva contenido, asignatura y vínculos al migrar');
+  const oldKey = env.JARVIS_KEY; env.JARVIS_KEY = randomBytes(32).toString('hex');
+  assert.equal((await privateCall('/api/jarvis/health', 'GET', undefined, { key: oldKey })).status, 401);
+  clearLimits();
+  for (let i = 0; i < 60; i++) assert.equal((await privateCall('/api/jarvis/health')).status, 200);
+  assert.equal((await privateCall('/api/jarvis/health')).status, 429);
+  clearLimits(); env.JARVIS_USER_ID = disposableUser.id;
+  assert.equal((await privateCall('/api/jarvis/health')).status, 401, 'una cuenta eliminada no se puede suplantar');
+  env.JARVIS_USER_ID = owner;
+  db.sqlite.prepare('UPDATE "user" SET "emailVerified"=0 WHERE id=?').run(owner);
+  assert.equal((await privateCall('/api/jarvis/health')).status, 401);
+  db.sqlite.prepare('UPDATE "user" SET "emailVerified"=1 WHERE id=?').run(owner);
+  delete env.JARVIS_KEY;
+  assert.equal((await privateCall('/api/jarvis/health', 'GET', undefined, { key: oldKey })).status, 401);
+  console.log('OK: API privada sin cookies, aislamiento, estados, tareas generales, avisos, límites y guardado atómico');
   console.log('OK: autenticación, aislamiento, sincronización, avisos y eliminación atómica completa de una cuenta descartable en Cloudflare');
 } finally { db.sqlite.close(); }

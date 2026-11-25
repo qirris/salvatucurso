@@ -153,7 +153,7 @@ function showDataMigration() {
   const dialog = $('#dialog-data-migration');
   $('#migration-download').addEventListener('click', () => {
     const url = URL.createObjectURL(new Blob([pendingDataMigration], { type: 'application/json' }));
-    const link = document.createElement('a'); link.href = url; link.download = 'salvatucurso-antes-de-revisar-horas.json'; link.click(); URL.revokeObjectURL(url);
+    const link = document.createElement('a'); link.href = url; link.download = 'salvatucurso-antes-del-formato-4.json'; link.click(); URL.revokeObjectURL(url);
   });
   $('#migration-continue').addEventListener('click', () => {
     try { saveState(); pendingDataMigration = null; dialog.close(); startAccountServices(); }

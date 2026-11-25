@@ -20,19 +20,21 @@ export function jobsForCourse(course, prefs, timeZone, now = Date.now()) {
   const jobs = [];
   for (const task of course.tareas || []) {
     const subject = course.asignaturas.find(a => a.id === task.asignaturaId && !a.archivada);
-    if (!subject || task.estado !== 'pendiente' || task.tipo === 'nota' || !validDate(task.fechaEntrega) || task.fechaEntrega < today) continue;
+    if ((task.asignaturaId && !subject) || task.estado !== 'pendiente' || task.tipo === 'nota' || !validDate(task.fechaEntrega) || task.fechaEntrega < today) continue;
     const days = task.tipo === 'examen' ? prefs.examDays : prefs.taskDays;
     const start = new Date(Date.parse(task.fechaEntrega + 'T12:00:00Z') - days * DAY).toISOString().slice(0, 10);
     const expiresAt = inZone(task.fechaEntrega, '23:59', timeZone) + 59999;
     jobs.push({ id: crypto.randomUUID(), key: task.id + '|' + task.fechaEntrega, taskId: task.id, date: task.fechaEntrega,
-      title: String(task.titulo || '').slice(0, 160), subject: String(subject.nombre || '').slice(0, 100), kind: task.tipo === 'examen' ? 'examen' : 'tarea',
+      title: String(task.titulo || '').slice(0, 160), subject: String(subject?.nombre || 'General').slice(0, 100), kind: task.tipo === 'examen' ? 'examen' : 'tarea',
       timeZone, runAt: inZone(start, prefs.time, timeZone), expiresAt });
   }
   if (jobs.length > 1000) throw new Error('Demasiadas actividades pendientes');
   return jobs;
 }
 export function validateCourse(value) {
-  if (!value || value.version !== 3 || !Array.isArray(value.asignaturas) || !Array.isArray(value.tareas) || !Array.isArray(value.faltas) || !value.config) throw new TypeError('Curso inválido');
+  if (!value || value.version !== 4 || !Array.isArray(value.asignaturas) || !Array.isArray(value.tareas) || !Array.isArray(value.faltas) || !value.config) throw new TypeError('Curso inválido');
+  if (value.tareas.some(task => !task || typeof task.asignaturaId !== 'string' || typeof task.titulo !== 'string' ||
+    !['pendiente', 'completada', 'eliminada'].includes(task.estado))) throw new TypeError('Tarea inválida');
   const ruleValid = rule => rule === null || !!rule && ['', 'horas', 'porcentaje', 'manual'].includes(rule.tipo) &&
     (rule.valor === null || Number.isFinite(rule.valor) && rule.valor >= 0 && (rule.tipo !== 'porcentaje' || rule.valor <= 100)) &&
     ['superar', 'alcanzar'].includes(rule.operador) && ['todas', 'injustificadas'].includes(rule.faltas) &&

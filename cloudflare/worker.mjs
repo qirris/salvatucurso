@@ -2,6 +2,7 @@ import { createAuth } from './auth.mjs';
 import { validateSubscription, notificationPayload } from './validation.mjs';
 import { jobsForCourse, reminderPrefs, validateCourse } from './planning.mjs';
 import webpush from 'web-push';
+import { isTaskRoute, privateUser, taskAPI } from './tasks.mjs';
 
 const json = (body, status = 200, headers = {}) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store', ...headers } });
 async function readBody(request) {
@@ -122,6 +123,24 @@ export default {
       return new Response('window.SalvaTuCursoPushConfig = ' + JSON.stringify({ enabled, apiBase: '/api', vapidPublicKey: env.VAPID_PUBLIC_KEY || '', google, email }) + ';', { headers: { 'Content-Type': 'text/javascript', 'Cache-Control': 'no-store' } });
     }
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
+    if (isTaskRoute(url.pathname)) {
+      try {
+        let userId = await privateUser(request, env);
+        const keyed = !!userId;
+        if (!userId && url.pathname !== '/api/jarvis/health' && env.BETTER_AUTH_SECRET?.length >= 32) {
+          const session = await createAuth(env, ctx).api.getSession({ headers: request.headers });
+          if (session?.user?.emailVerified) userId = session.user.id;
+        }
+        if (!userId) return json({ error: 'Acceso no autorizado' }, 401);
+        const origin = request.headers.get('Origin');
+        if ((origin && origin !== env.APP_ORIGIN) || (!keyed && request.method !== 'GET' && origin !== env.APP_ORIGIN))
+          return json({ error: 'Origen no permitido' }, 403);
+        const now = Date.now(), key = 'curso:' + userId + ':' + Math.floor(now / 60000);
+        const allowed = await env.DB.prepare('INSERT INTO "rateLimit"("id","key","count","lastRequest") VALUES(?,?,1,?) ON CONFLICT("key") DO UPDATE SET "count"="count"+1 WHERE "count"<60 RETURNING "count"').bind(crypto.randomUUID(), key, now).first();
+        if (!allowed) return json({ error: 'Espera un minuto antes de continuar' }, 429);
+        return await taskAPI(request, env, userId, readBody, putCourse);
+      } catch (error) { return json({ error: 'No se ha podido completar la operación' }, error instanceof SyntaxError || error instanceof TypeError ? 400 : 503); }
+    }
     if (!env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET.length < 32) return json({ error: 'El servicio aún no está configurado' }, 503);
     try {
       const auth = createAuth(env, ctx);
@@ -129,8 +148,8 @@ export default {
       if (request.method !== 'GET' && request.headers.get('Origin') !== env.APP_ORIGIN) return json({ error: 'Origen no permitido' }, 403);
       const session = await auth.api.getSession({ headers: request.headers });
       if (!session?.user?.emailVerified) return json({ error: 'Inicia sesión para continuar' }, 401);
-      if (url.pathname === '/api/course' && request.headers.get('X-SalvaTuCurso-Data-Version') !== '3')
-        return json({ code: 'update_required', error: 'Actualiza SalvaTuCurso para sincronizar el nuevo formato de horas. Tus datos se conservan.' }, 426);
+      if (url.pathname === '/api/course' && request.headers.get('X-SalvaTuCurso-Data-Version') !== '4')
+        return json({ code: 'update_required', error: 'Actualiza SalvaTuCurso para sincronizar las tareas generales y la Papelera. Tus datos se conservan.' }, 426);
       const userId = session.user.id;
       if (request.method !== 'GET') {
         const now = Date.now(), key = 'curso:' + userId + ':' + Math.floor(now / 60000);

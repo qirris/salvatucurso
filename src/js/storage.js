@@ -3,14 +3,14 @@
    Persistencia en localStorage, migración y normalización de datos.
    ============================================================ */
 
-const STORAGE_KEY = 'salvatucursoStateV3';
+const STORAGE_KEY = 'salvatucursoStateV4';
 const PREVIOUS_STORAGE_KEY = 'miAsistenciaState';
 const LEGACY_KEY = 'asistenciaData';
 let persistedStateJSON = null;
 let pendingDataMigration = null;
 
 const DEFAULT_STATE = {
-  version: 3,
+  version: 4,
   etapa: 'fp_superior',
   asignaturas: [],
   faltas: [],
@@ -33,7 +33,7 @@ function todayISO() {
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
   persistedStateJSON = raw;
-  const previous = raw || localStorage.getItem(PREVIOUS_STORAGE_KEY);
+  const previous = raw || localStorage.getItem('salvatucursoStateV3') || localStorage.getItem(PREVIOUS_STORAGE_KEY);
   if (previous) {
     state = normalizeState(JSON.parse(previous));
     if (!raw) pendingDataMigration = previous;
@@ -96,15 +96,17 @@ function isStoredStateCurrent() {
 }
 
 function normalizeState(input) {
-  if (input && input.version != null && ![1, 2, 3].includes(input.version)) throw new Error('Esta copia necesita una versión más reciente de SalvaTuCurso.');
-  if (input && input.version === 3 && (!Array.isArray(input.asignaturas) || !Array.isArray(input.faltas) || !Array.isArray(input.tareas) || !input.config ||
+  if (input && input.version != null && ![1, 2, 3, 4].includes(input.version)) throw new Error('Esta copia necesita una versión más reciente de SalvaTuCurso.');
+  if (input && input.version >= 3 && (!Array.isArray(input.asignaturas) || !Array.isArray(input.faltas) || !Array.isArray(input.tareas) || !input.config ||
     !validAttendanceRule(input.config.criterio) || input.asignaturas.some(a => !a || !a.computo || !['estimado', 'confirmado'].includes(a.computo.origen) ||
       !Number.isFinite(a.horasTotales) || a.horasTotales < 0 || typeof a.computo.referencia !== 'string' ||
       typeof a.computo.inicio !== 'string' || (a.computo.inicio && !validAttendanceDate(a.computo.inicio)) || !Object.prototype.hasOwnProperty.call(a, 'criterio') || !validAttendanceRule(a.criterio)) ||
     input.faltas.some(f => !f || !['centro', 'empresa', 'sin_especificar'].includes(f.procedencia))))
-    throw new Error('La copia de versión 3 está incompleta. No se han sustituido tus datos.');
+    throw new Error('La copia está incompleta. No se han sustituido tus datos.');
+  if (input?.version === 4 && input.tareas.some(t => !t || !t.id || typeof t.asignaturaId !== 'string' ||
+    !['pendiente', 'completada', 'eliminada'].includes(t.estado))) throw new Error('La copia contiene tareas incompletas. No se han sustituido tus datos.');
   const out = Object.assign({}, DEFAULT_STATE, input || {});
-  out.version = 3;
+  out.version = 4;
   if (!ETAPAS[out.etapa]) out.etapa = 'fp_superior';
 
   out.asignaturas = Array.isArray(out.asignaturas)
@@ -138,9 +140,9 @@ function normalizeState(input) {
     : [];
 
   out.tareas = Array.isArray(out.tareas)
-    ? out.tareas.filter(t => t && t.id && t.asignaturaId).map(t => ({
+    ? out.tareas.filter(t => t && t.id).map(t => ({
         id: String(t.id),
-        asignaturaId: String(t.asignaturaId),
+        asignaturaId: String(t.asignaturaId || ''),
         asignaturaNombre: String(t.asignaturaNombre || ''),
         slotKey: t.slotKey ? String(t.slotKey) : '',
         dia: String(t.dia || ''),
@@ -150,7 +152,7 @@ function normalizeState(input) {
         fechaEntrega: String(t.fechaEntrega || ''),
         tipo: ['deberes', 'estudiar', 'examen', 'trabajo', 'proyecto', 'otros', 'nota'].includes(t.tipo) ? t.tipo : 'deberes',
         prioridad: ['baja', 'normal', 'alta'].includes(t.prioridad) ? t.prioridad : 'normal',
-        estado: t.estado === 'completada' ? 'completada' : 'pendiente',
+        estado: ['completada', 'eliminada'].includes(t.estado) ? t.estado : 'pendiente',
         titulo: String(t.titulo || ''),
         descripcion: String(t.descripcion || '')
       }))

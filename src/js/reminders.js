@@ -50,7 +50,7 @@ const TaskReminders = (() => {
     for (const task of academic.tareas || []) {
       if (task.estado !== 'pendiente' || task.tipo === 'nota' || !validCalendarDate(task.fechaEntrega) || task.fechaEntrega < today) continue;
       const subject = (academic.asignaturas || []).find(a => a.id === task.asignaturaId);
-      if (!subject || subject.archivada) continue;
+      if (task.asignaturaId && (!subject || subject.archivada)) continue;
       const days = task.tipo === 'examen' ? settings.examDays : settings.taskDays;
       const start = calendarAddDays(task.fechaEntrega, -days);
       if (!validCalendarDate(start)) continue;
@@ -59,7 +59,7 @@ const TaskReminders = (() => {
       jobs.push({
         key: task.id + '|' + task.fechaEntrega,
         taskId: String(task.id), date: task.fechaEntrega,
-        title: String(task.titulo).slice(0, 160), subject: String(subject.nombre).slice(0, 100),
+        title: String(task.titulo).slice(0, 160), subject: String(subject?.nombre || 'General').slice(0, 100),
         kind: task.tipo === 'examen' ? 'examen' : 'tarea',
         runAt: localDateTime(start, settings.time).toISOString(), expiresAt: expiry.toISOString(),
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -223,7 +223,7 @@ const TaskReminders = (() => {
     if (id && !CourseAccount.ready()) { showView('config'); toast('Revisa tu cuenta y la sincronización para abrir la actividad.'); return; }
     showView('tareas');
     if (!id) return;
-    const task = state.tareas.find(t => t.id === id);
+    const task = state.tareas.find(t => t.id === id && t.estado !== 'eliminada');
     if (task) openTaskEditDialog(task.id);
     else toast('Esta actividad ya no está en este navegador.');
   }

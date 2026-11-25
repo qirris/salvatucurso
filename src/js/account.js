@@ -1,9 +1,13 @@
 /* Acceso y sincronización: cookies de sesión; nunca se guardan contraseñas en el navegador. */
 const CourseAccount = (() => {
-  const META = 'salvatucursoCuentaV3', GUEST = 'salvatucursoInvitadoV3';
+  const META = 'salvatucursoCuentaV4', GUEST = 'salvatucursoInvitadoV4';
   let user = null, meta = null, remote = null, suppress = false, busy = false, pending = false;
   let status = '', timer = null, pollTimer = null, request = null, formMode = 'login', resetToken = '', draft = false, bound = false, initialization = null, authenticated = false, deleting = false, deleteTrigger = null;
-  try { meta = JSON.parse((localStorage.getItem(META) || localStorage.getItem('salvatucursoCuenta'))); user = meta?.user || null; } catch (error) { /* Sin cuenta local. */ }
+  function migrateMeta(value) {
+    if (value?.base) value.base = JSON.stringify(normalizeState(JSON.parse(value.base)));
+    return value;
+  }
+  try { meta = JSON.parse(localStorage.getItem(META) || localStorage.getItem('salvatucursoCuentaV3') || localStorage.getItem('salvatucursoCuenta')); user = meta?.user || null; } catch (error) { /* Sin cuenta local; el curso anterior permanece guardado. */ }
   const config = () => window.SalvaTuCursoPushConfig || {};
   const configured = () => config().enabled === true && config().apiBase === '/api';
   const hasData = course => !!(course && ['asignaturas', 'faltas', 'tareas'].some(key => course[key]?.length));
@@ -12,7 +16,7 @@ const CourseAccount = (() => {
     localStorage.setItem(META, JSON.stringify(meta));
     if (meta?.user?.id) {
       localStorage.setItem(META + '_' + meta.user.id, JSON.stringify(meta));
-      localStorage.setItem('salvatucursoCursoCuentaV3_' + meta.user.id, JSON.stringify(state));
+      localStorage.setItem('salvatucursoCursoCuentaV4_' + meta.user.id, JSON.stringify(state));
     }
   }
   function backup() {
@@ -36,7 +40,7 @@ const CourseAccount = (() => {
     const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 15000);
     try {
       const response = await fetch('/api/' + path, { method, credentials: 'same-origin', cache: 'no-store', signal: controller.signal,
-        headers: { 'X-SalvaTuCurso-Data-Version': '3', ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) }, body: body === undefined ? undefined : JSON.stringify(body) });
+        headers: { 'X-SalvaTuCurso-Data-Version': '4', ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) }, body: body === undefined ? undefined : JSON.stringify(body) });
       const data = await response.json();
       if (!response.ok) { const error = new Error(response.status === 429 ? 'Espera un minuto y vuelve a intentarlo.' : response.status === 401 ? 'Vuelve a iniciar sesión para sincronizar.' : data.error || 'No se ha podido completar. Revisa los datos y tu conexión.'); error.status = response.status; error.code = data.code; throw error; }
       return data;
@@ -142,8 +146,8 @@ const CourseAccount = (() => {
         if (!user) localStorage.setItem(GUEST, JSON.stringify(state));
         user = data.user;
         if (meta?.user?.id !== user.id) {
-          const cachedMeta = JSON.parse(localStorage.getItem(META + '_' + user.id) || localStorage.getItem('salvatucursoCuenta_' + user.id) || 'null');
-          const cachedCourse = JSON.parse(localStorage.getItem('salvatucursoCursoCuentaV3_' + user.id) || localStorage.getItem('salvatucursoCursoCuenta_' + user.id) || 'null');
+          const cachedMeta = migrateMeta(JSON.parse(localStorage.getItem(META + '_' + user.id) || localStorage.getItem('salvatucursoCuentaV3_' + user.id) || localStorage.getItem('salvatucursoCuenta_' + user.id) || 'null'));
+          const cachedCourse = JSON.parse(localStorage.getItem('salvatucursoCursoCuentaV4_' + user.id) || localStorage.getItem('salvatucursoCursoCuentaV3_' + user.id) || localStorage.getItem('salvatucursoCursoCuenta_' + user.id) || 'null');
           if (cachedMeta?.user?.id === user.id && cachedCourse) {
             suppress = true; state = normalizeState(cachedCourse); saveState(); suppress = false;
             meta = cachedMeta; persist(); render();
@@ -196,8 +200,8 @@ const CourseAccount = (() => {
       if (typeof TaskReminders !== 'undefined' && !await TaskReminders.disableForLogout()) throw new Error('Conéctate para desactivar los avisos antes de salir.');
       if (meta?.dirty || pending) { exportJSON(); throw new Error('Se ha descargado una copia de tus cambios. Sincroniza o revisa las versiones antes de salir.'); }
       await api('auth/sign-out', {});
-      localStorage.setItem('salvatucursoCursoCuentaV3_' + user.id, JSON.stringify(state));
-      const guest = JSON.parse(localStorage.getItem(GUEST) || localStorage.getItem('salvatucursoInvitado') || 'null');
+      localStorage.setItem('salvatucursoCursoCuentaV4_' + user.id, JSON.stringify(state));
+      const guest = JSON.parse(localStorage.getItem(GUEST) || localStorage.getItem('salvatucursoInvitadoV3') || localStorage.getItem('salvatucursoInvitado') || 'null');
       user = null; meta = null; authenticated = false; localStorage.removeItem(META); suppress = true;
       state = normalizeState(guest || JSON.parse(JSON.stringify(DEFAULT_STATE))); saveState(); suppress = false;
       UndoManager.clear(); status = 'Has salido de tu cuenta. Se muestran los datos locales de invitado.'; render();
@@ -258,10 +262,11 @@ const CourseAccount = (() => {
   }
   function bind() {
     if (bound) return; bound = true;
+    try { meta = migrateMeta(meta); } catch (error) { if (meta) meta.dirty = true; }
     // Congelar la copia de invitado anterior: una pestaña antigua ya no puede alterarla.
     try {
       if (!localStorage.getItem(GUEST)) {
-        const previousGuest = localStorage.getItem('salvatucursoInvitado');
+        const previousGuest = localStorage.getItem('salvatucursoInvitadoV3') || localStorage.getItem('salvatucursoInvitado');
         if (previousGuest) localStorage.setItem(GUEST, JSON.stringify(normalizeState(JSON.parse(previousGuest))));
       }
     } catch (error) { status = 'No se pudo preparar la copia local de invitado. Conserva una copia antes de cerrar sesión.'; }

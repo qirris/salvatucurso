@@ -40,6 +40,7 @@ function formatoEntrega(fechaStr) {
 }
 
 function calcularEstadoVisualTask(t) {
+  if (t.estado === 'eliminada') return { tone: 'gray', label: 'En la Papelera', cls: 'none' };
   if (t.estado === 'completada') return { tone: 'green', label: 'Completada', cls: 'ok' };
   const d = diasHasta(t.fechaEntrega);
   if (d != null && d < 0) return { tone: 'red', label: 'Vencida', cls: 'over' };
@@ -51,12 +52,12 @@ function calcularEstadoVisualTask(t) {
 /* ---------- Consultas de tareas ---------- */
 function getTareasForSlot(slotKey) {
   if (!state || !state.tareas) return [];
-  return state.tareas.filter(t => t.slotKey === slotKey);
+  return state.tareas.filter(t => t.estado !== 'eliminada' && t.slotKey === slotKey);
 }
 
 function getTareasForAsignatura(asignaturaId) {
   if (!state || !state.tareas) return [];
-  return state.tareas.filter(t => t.asignaturaId === asignaturaId);
+  return state.tareas.filter(t => t.estado !== 'eliminada' && t.asignaturaId === asignaturaId);
 }
 
 function countTareasPendientesSlot(slotKey) {
@@ -73,7 +74,7 @@ function crearTarea(data) {
   const a = asignaturaPorId(data.asignaturaId);
   const nueva = {
     id: uid(),
-    asignaturaId: String(data.asignaturaId),
+    asignaturaId: String(data.asignaturaId || ''),
     asignaturaNombre: a ? a.nombre : String(data.asignaturaNombre || ''),
     slotKey: data.slotKey ? String(data.slotKey) : '',
     dia: String(data.dia || ''),
@@ -87,24 +88,24 @@ function crearTarea(data) {
     titulo: String(data.titulo || '').trim(),
     descripcion: String(data.descripcion || '').trim()
   };
-  state.tareas.push(nueva);
-  saveState();
+  commitAcademicChange({ ...state, tareas: state.tareas.concat(nueva) });
   return nueva;
 }
 
 function actualizarTarea(id, data) {
-  const t = state.tareas.find(x => x.id === id);
-  if (!t) return false;
-  t.asignaturaId = String(data.asignaturaId);
+  const original = state.tareas.find(x => x.id === id);
+  if (!original || original.estado === 'eliminada') return false;
+  const t = { ...original, asignaturaId: String(data.asignaturaId || '') };
   const a = asignaturaPorId(t.asignaturaId);
-  t.asignaturaNombre = a ? a.nombre : t.asignaturaNombre;
+  t.asignaturaNombre = a ? a.nombre : '';
+  if (t.asignaturaId !== original.asignaturaId) t.slotKey = t.dia = t.horaInicio = t.horaFin = '';
   t.titulo = String(data.titulo || '').trim();
   t.descripcion = String(data.descripcion || '').trim();
   t.tipo = TIPOS_TAREA[data.tipo] ? data.tipo : 'deberes';
   t.prioridad = PRIORIDADES[data.prioridad] ? data.prioridad : 'normal';
   t.fechaEntrega = data.fechaEntrega ? String(data.fechaEntrega) : '';
   if (data.estado) t.estado = data.estado === 'completada' ? 'completada' : 'pendiente';
-  saveState();
+  commitAcademicChange({ ...state, tareas: state.tareas.map(item => item.id === id ? t : item) });
   return true;
 }
 
@@ -114,11 +115,23 @@ function eliminarTarea(id, originDialog = null) {
 
 function alternarEstadoTarea(id) {
   const t = state.tareas.find(x => x.id === id);
-  if (!t) return;
-  t.estado = t.estado === 'completada' ? 'pendiente' : 'completada';
-  saveState();
-  toast(t.estado === 'completada' ? 'Marcada como completada' : 'Marcada como pendiente');
+  if (!t || t.estado === 'eliminada') return;
+  const estado = t.estado === 'completada' ? 'pendiente' : 'completada';
+  try { commitAcademicChange({ ...state, tareas: state.tareas.map(item => item.id === id ? { ...item, estado } : item) }); }
+  catch (error) { render(); return toast('No se ha podido guardar. ' + error.message); }
+  toast(estado === 'completada' ? 'Marcada como completada' : 'Marcada como pendiente');
   render();
+}
+
+function restaurarTarea(id) {
+  const task = state.tareas.find(item => item.id === id && item.estado === 'eliminada');
+  if (!task) return false;
+  try { commitAcademicChange({ ...state, tareas: state.tareas.map(item => item.id === id ? { ...item, estado: 'pendiente' } : item) }); }
+  catch (error) { toast('No se ha podido restaurar. ' + error.message); return false; }
+  render(); toast('Tarea restaurada en Pendientes');
+  const next = $('#tasks-list').querySelector('[data-restoretarea]');
+  (next || $('[data-statustab="eliminada"]'))?.focus();
+  return true;
 }
 
 /* ---------- Diálogos e Interfaz de Tareas ---------- */
@@ -128,9 +141,8 @@ function openTaskDialog(prefill = {}) {
   const asigs = state.asignaturas.filter(a => !a.archivada);
   const selAsig = $('#dlg-task-asig');
   if (selAsig) {
-    selAsig.innerHTML = asigs.length
-      ? asigs.map(a => `<option value="${a.id}">${esc(a.nombre)}</option>`).join('')
-      : '<option value="">— Añade asignaturas primero —</option>';
+    selAsig.innerHTML = '<option value="">Sin asignatura · General</option>' + asigs.map(a => `<option value="${a.id}">${esc(a.nombre)}</option>`).join('');
+    selAsig.value = '';
     if (prefill.asignaturaId) selAsig.value = prefill.asignaturaId;
   }
 
@@ -157,13 +169,13 @@ function openTaskDialog(prefill = {}) {
 
 function openTaskEditDialog(id) {
   const t = state.tareas.find(x => x.id === id);
-  if (!t) return;
+  if (!t || t.estado === 'eliminada') return;
   editingTaskId = id;
   clearFormErrors($('#dialog-task'));
   const asigs = state.asignaturas.filter(a => !a.archivada || a.id === t.asignaturaId);
   const selAsig = $('#dlg-task-asig');
   if (selAsig) {
-    selAsig.innerHTML = asigs.map(a => `<option value="${a.id}">${esc(a.nombre)}${a.archivada ? ' (archivada)' : ''}</option>`).join('');
+    selAsig.innerHTML = '<option value="">Sin asignatura · General</option>' + asigs.map(a => `<option value="${a.id}">${esc(a.nombre)}${a.archivada ? ' (archivada)' : ''}</option>`).join('');
     selAsig.value = t.asignaturaId;
   }
 
@@ -200,13 +212,13 @@ function guardarTareaModal() {
   let hasError = false;
   let firstErr = null;
 
-  if (!titulo) {
-    setFieldError(tituloInput, 'Escribe un título para la actividad.');
+  if (!titulo || titulo.length > 200) {
+    setFieldError(tituloInput, 'Escribe un título de entre 1 y 200 caracteres.');
     if (!firstErr) firstErr = tituloInput;
     hasError = true;
   }
-  if (!asignaturaId) {
-    setFieldError(asigSelect, 'Selecciona una asignatura.');
+  if (asignaturaId && !asignaturaPorId(asignaturaId)) {
+    setFieldError(asigSelect, 'La asignatura ya no existe. Elige otra o deja la tarea como General.');
     if (!firstErr) firstErr = asigSelect;
     hasError = true;
   }
@@ -238,13 +250,15 @@ function guardarTareaModal() {
     horaFin: activeSlotContext ? activeSlotContext.horaFin : ''
   };
 
-  if (editingTaskId) {
-    actualizarTarea(editingTaskId, data);
-    toast('Actividad actualizada');
-  } else {
-    crearTarea(data);
-    toast('Actividad creada');
-  }
+  try {
+    if (editingTaskId) {
+      if (!actualizarTarea(editingTaskId, data)) throw new Error('La tarea ya no está disponible.');
+      toast('Actividad actualizada');
+    } else {
+      crearTarea(data);
+      toast('Actividad creada');
+    }
+  } catch (error) { return toast('No se ha podido guardar. ' + error.message); }
 
   dialogEl.close();
   render();
@@ -319,7 +333,8 @@ function renderTaskMiniCard(t) {
 
 /* ---------- Render: Vista «Mis tareas» ---------- */
 function renderMisTareas() {
-  const tareas = state.tareas || [];
+  const papelera = taskActiveTab === 'eliminada';
+  const tareas = (state.tareas || []).filter(t => papelera ? t.estado === 'eliminada' : t.estado !== 'eliminada');
   const pendientes = tareas.filter(t => t.estado === 'pendiente');
   const completadas = tareas.filter(t => t.estado === 'completada');
   const examenesPendientes = pendientes.filter(t => t.tipo === 'examen');
@@ -330,8 +345,8 @@ function renderMisTareas() {
 
   const statsEl = $('#tasks-stats');
   if (statsEl) {
-    statsEl.classList.toggle('hidden', tareas.length === 0);
-    statsEl.innerHTML = tareas.length ? `
+    statsEl.classList.toggle('hidden', tareas.length === 0 || papelera);
+    statsEl.innerHTML = tareas.length && !papelera ? `
       <span><strong>${pendientes.length}</strong> pendiente${pendientes.length === 1 ? '' : 's'}</span>
       <span><strong>${proximas.length}</strong> para los próximos 3 días</span>
       ${examenesPendientes.length ? '<span><strong>' + examenesPendientes.length + '</strong> examen' + (examenesPendientes.length === 1 ? '' : 'es') + '</span>' : ''}
@@ -341,7 +356,7 @@ function renderMisTareas() {
   const filtroAsig = $('#task-filtro-asig');
   const prevAsig = filtroAsig ? filtroAsig.value : '';
   if (filtroAsig) {
-    filtroAsig.innerHTML = `<option value="">Todas las asignaturas</option>` +
+    filtroAsig.innerHTML = `<option value="">Todas las tareas</option><option value="__general">Sin asignatura · General</option>` +
       state.asignaturas.map(a => `<option value="${a.id}">${esc(a.nombre)}</option>`).join('');
     if (prevAsig) filtroAsig.value = prevAsig;
   }
@@ -361,7 +376,7 @@ function renderMisTareas() {
     lista = lista.filter(t => t.estado === 'completada');
   }
 
-  if (fa) lista = lista.filter(t => t.asignaturaId === fa);
+  if (fa) lista = lista.filter(t => fa === '__general' ? !t.asignaturaId : t.asignaturaId === fa);
   if (ft) lista = lista.filter(t => t.tipo === ft);
   if (fp) lista = lista.filter(t => t.prioridad === fp);
 
@@ -377,7 +392,6 @@ function renderMisTareas() {
   if (!cont) return;
 
   if (lista.length === 0) {
-    const hasSubjects = state.asignaturas.some(a => !a.archivada);
     let title = taskActiveTab === 'completada' ? 'Aún no hay tareas completadas' : 'Todo al día';
     let description = taskActiveTab === 'completada' ? 'Aquí aparecerán las actividades que marques como terminadas.' : 'No tienes tareas pendientes. Puedes añadir la siguiente cuando quieras.';
     let action = '<button class="btn" type="button" onclick="openTaskDialog()">' + uiIcon('plus') + ' Nueva tarea</button>';
@@ -385,16 +399,19 @@ function renderMisTareas() {
       title = 'No hay coincidencias';
       description = 'Prueba con otra asignatura, tipo o prioridad.';
       action = '<button class="btn btn-secondary" type="button" onclick="document.querySelector(\'#btn-reset-task-filters\').click()">Limpiar filtros</button>';
+    } else if (papelera) {
+      title = 'La Papelera está vacía';
+      description = 'Las tareas que elimines aparecerán aquí para que puedas restaurarlas.';
+      action = '';
     } else if (!tareas.length) {
-      title = hasSubjects ? 'Tu agenda empieza aquí' : 'Primero, tus asignaturas';
-      description = hasSubjects ? 'Añade una tarea o un examen y tendrás sus fechas a mano.' : 'Añade una asignatura para vincular tus tareas y organizar las entregas.';
-      if (!hasSubjects) action = '<button class="btn" type="button" data-dashboard-action="nueva-asignatura">' + uiIcon('plus') + ' Añadir asignatura</button>';
+      title = 'Tu agenda empieza aquí';
+      description = 'Añade una tarea general o vincúlala a una asignatura para organizar tus entregas.';
     }
     cont.innerHTML = '<div class="empty-state-card"><span class="empty-symbol">' + uiIcon('check') + '</span><h3>' + title + '</h3><p>' + description + '</p>' + action + '</div>';
     return;
   }
 
-  cont.innerHTML = lista.map(t => {
+  cont.innerHTML = (papelera ? '<p class="muted">Las tareas de la Papelera no generan avisos. Puedes restaurarlas en Pendientes.</p>' : '') + lista.map(t => {
     const a = asignaturaPorId(t.asignaturaId);
     const color = a ? a.color : 'azul';
     const st = calcularEstadoVisualTask(t);
@@ -403,21 +420,21 @@ function renderMisTareas() {
     return `
       <div class="task-card sc-${color} ${t.estado === 'completada' ? 'completed' : ''}">
         <div class="tc-top">
-          <label class="checkbox-target"><input type="checkbox" data-toggletask="${t.id}" ${t.estado === 'completada' ? 'checked' : ''} aria-label="Marcar como ${t.estado === 'completada' ? 'pendiente' : 'completada'}: ${esc(t.titulo)}"></label>
+          ${papelera ? '' : `<label class="checkbox-target"><input type="checkbox" data-toggletask="${t.id}" ${t.estado === 'completada' ? 'checked' : ''} aria-label="Marcar como ${t.estado === 'completada' ? 'pendiente' : 'completada'}: ${esc(t.titulo)}"></label>`}
           <div class="tc-info">
             <span class="badge ${tipoInfo.badge}">${tipoInfo.icon} ${tipoInfo.label}</span>
             <span class="badge ${st.tone}">${st.label}</span>
             ${t.prioridad === 'alta' ? '<span class="badge red">Prioridad alta</span>' : ''}
           </div>
           <div class="tc-actions">
-            <button class="btn btn-ghost btn-sm" type="button" data-edittask="${t.id}" aria-label="Editar">Editar</button>
-            <button class="btn btn-danger btn-sm" type="button" data-deltask="${t.id}" aria-label="Eliminar">${uiIcon('trash')}</button>
+            ${papelera ? `<button class="btn btn-secondary btn-sm" type="button" data-restoretarea="${t.id}" aria-label="Restaurar: ${esc(t.titulo)}">Restaurar</button>` : `<button class="btn btn-ghost btn-sm" type="button" data-edittask="${t.id}" aria-label="Editar: ${esc(t.titulo)}">Editar</button>
+            <button class="btn btn-danger btn-sm" type="button" data-deltask="${t.id}" aria-label="Mover a Papelera: ${esc(t.titulo)}">${uiIcon('trash')}</button>`}
           </div>
         </div>
         <div class="tc-title">${esc(t.titulo)}</div>
         ${t.descripcion ? `<div class="tc-desc">${esc(t.descripcion)}</div>` : ''}
         <div class="tc-footer">
-          <span>${uiIcon('book')} <strong>${esc(a ? a.nombre : t.asignaturaNombre || 'Asignatura')}</strong></span>
+          <span>${uiIcon('book')} <strong>${esc(!t.asignaturaId ? 'General' : a ? a.nombre : t.asignaturaNombre || 'Asignatura')}</strong></span>
           ${t.dia ? `<span>${uiIcon('calendar')} ${diaLabel(t.dia)} (${t.horaInicio}–${t.horaFin})</span>` : ''}
           ${t.fechaEntrega ? `<span>${uiIcon('clock')} ${formatoEntrega(t.fechaEntrega)}</span>` : ''}
         </div>
@@ -457,6 +474,15 @@ function bindTasks() {
   // Tabs de estado
   const tabsContainer = $('#task-state-tabs');
   if (tabsContainer) {
+    tabsContainer.addEventListener('keydown', e => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+      const tabs = Array.from(tabsContainer.querySelectorAll('[data-statustab]'));
+      const index = tabs.indexOf(e.target);
+      if (index < 0) return;
+      e.preventDefault();
+      const next = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (index + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      tabs[next].click(); tabs[next].focus();
+    });
     tabsContainer.addEventListener('click', (e) => {
       const tab = e.target.closest('[data-statustab]');
       if (!tab) return;
@@ -487,6 +513,8 @@ function bindTasks() {
   });
 
   document.addEventListener('click', (e) => {
+    const restore = e.target.closest('[data-restoretarea]');
+    if (restore) { restaurarTarea(restore.dataset.restoretarea); return; }
     const toggle = e.target.closest('[data-toggletask]');
     if (toggle) {
       alternarEstadoTarea(toggle.dataset.toggletask);

@@ -29,18 +29,18 @@ const old = { version: 2, etapa: 'fp_superior', asignaturas: [{ id: 'a', nombre:
   tareas: [{ id: 't', asignaturaId: 'a', titulo: 'Conservar', fechaEntrega: '2026-12-01', estado: 'completada' }],
   config: { onboarding: { etapaConfirmada: true, oculto: true } } };
 let h = harness(old), s = h.s, subject = h.state().asignaturas[0];
-assert.equal(h.state().version, 3);
+assert.equal(h.state().version, 4);
 assert.equal(h.values.miAsistenciaState, JSON.stringify(old));
-assert.equal(h.values.salvatucursoStateV3, undefined, 'no guarda la migración antes de ofrecer la copia');
+assert.equal(h.values.salvatucursoStateV4, undefined, 'no guarda la migración antes de ofrecer la copia');
 assert.equal(subject.computo.origen, 'estimado'); assert.equal(subject.horasTotales, 120);
 assert.equal(h.state().faltas[1].sesion.fin, '18:00');
 assert.equal(h.state().tareas[0].estado, 'completada'); assert.equal(h.state().config.onboarding.oculto, true);
 s.showDataMigration(); assert.equal(h.node('#dialog-data-migration').open, true);
 h.fail(true); h.node('#migration-continue').fire('click');
-assert.equal(h.node('#dialog-data-migration').open, true); assert.equal(h.values.salvatucursoStateV3, undefined);
+assert.equal(h.node('#dialog-data-migration').open, true); assert.equal(h.values.salvatucursoStateV4, undefined);
 assert.equal(h.values.miAsistenciaState, JSON.stringify(old));
 h.fail(false); h.node('#migration-continue').fire('click');
-assert.equal(h.node('#dialog-data-migration').open, false); assert.ok(h.values.salvatucursoStateV3);
+assert.equal(h.node('#dialog-data-migration').open, false); assert.ok(h.values.salvatucursoStateV4);
 assert.equal(h.values.miAsistenciaState, JSON.stringify(old));
 assert.equal(s.calcAsignatura(subject).pctAusencia, 17.5);
 subject.horasTotales = 100; subject.computo.origen = 'confirmado';
@@ -85,10 +85,10 @@ subject.computo.origen = 'confirmado'; subject.computo.inicio = ''; subject.crit
 s.renderAttendanceReview(); assert.equal(h.node('#settings-pending-more').hidden, true);
 s.saveState(); const before = JSON.stringify(h.state()); const next = clone(h.state()); next.asignaturas[0].horasTotales = 200;
 h.fail(true); assert.throws(() => s.commitAcademicChange(next)); assert.equal(JSON.stringify(h.state()), before);
-h.fail(false); h.values.salvatucursoStateV3 = '{"anotherTab":true}'; assert.throws(() => s.commitAcademicChange(next)); assert.equal(JSON.stringify(h.state()), before);
+h.fail(false); h.values.salvatucursoStateV4 = '{"anotherTab":true}'; assert.throws(() => s.commitAcademicChange(next)); assert.equal(JSON.stringify(h.state()), before);
 assert.throws(() => s.normalizeState({ ...clone(h.state()), version: 99 }));
 const broken = clone(h.state()); delete broken.asignaturas[0].computo;
 assert.throws(() => s.normalizeState(broken));
 const roundtrip = s.normalizeState(JSON.parse(before)); assert.deepEqual(clone(roundtrip), JSON.parse(before));
-const blank = harness(); assert.equal(blank.state().version, 3, 'una instalación nueva abre con configuración válida');
+const blank = harness(); assert.equal(blank.state().version, 4, 'una instalación nueva abre con configuración válida');
 console.log('OK: horas estimadas/confirmadas, criterios documentados, matrícula, alertas, migración con copia previa, fallos y formatos incompatibles');

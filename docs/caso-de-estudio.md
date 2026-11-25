@@ -84,6 +84,8 @@ La incorporación de horas estimadas y confirmadas requirió ampliar el formato 
 
 El nuevo formato utiliza un espacio de almacenamiento propio y el servidor exige identificar la versión del cliente antes de permitir el acceso al curso. Así se evita que una edición antigua sustituya los campos nuevos al sincronizar. Las pruebas cubren formatos incompletos, fallos de guardado y conservación de registros.
 
+El formato actual es el 4: conserva esa información y añade tareas generales y una Papelera recuperable. La misma protección de versión impide que una aplicación antigua descarte actividades sin asignatura o reactive las eliminadas.
+
 ### Mostrar cálculos con el alcance adecuado
 
 Una multiplicación de horas semanales por semanas es una estimación, no necesariamente la duración oficial de un módulo. La aplicación permite mantener esa estimación o introducir un total confirmado por la persona, y separa el mínimo de asistencia de FP del criterio documentado del centro.

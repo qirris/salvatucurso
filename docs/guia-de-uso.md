@@ -26,11 +26,15 @@ En FP puedes añadir una fecha de matrícula o inicio del cómputo. Las ausencia
 
 ## Actualizar un curso anterior
 
-Antes de guardar por primera vez el formato 3, la app ofrece **Descargar copia anterior** y **Continuar**. Conserva el curso previo en el almacenamiento antiguo y utiliza una clave distinta para el nuevo formato. Se mantienen las horas, colores, tareas, faltas, franjas y calendario; las horas anteriores quedan pendientes de confirmar. Una edición de nombre o color conserva un total antiguo aunque no coincida con la multiplicación de sus horas semanales y semanas.
+Antes de guardar por primera vez el formato 4, la app ofrece **Descargar copia anterior** y **Continuar**. Conserva el curso previo en el almacenamiento antiguo y utiliza una clave distinta para el nuevo formato. Se mantienen las horas, colores, criterios, tareas, faltas, franjas y calendario. Los cursos del formato 3 conservan sus horas estimadas o confirmadas; los formatos más antiguos conservan sus totales como pendientes de confirmar.
 
-Los otros dispositivos deben actualizar la aplicación para sincronizar. El servidor rechaza el acceso al curso desde clientes antiguos. Puedes importar copias anteriores, y se rechazan versiones futuras o formatos nuevos incompletos. Si falla el guardado, conserva tu copia y vuelve a intentarlo. La actualización de formato empieza un diario nuevo de **Deshacer**: una operación pendiente de una versión antigua debe resolverse antes de actualizar.
+Los otros dispositivos deben actualizar la aplicación para sincronizar. El servidor rechaza el acceso al curso desde clientes antiguos. Puedes importar copias anteriores, y se rechazan versiones futuras o formatos nuevos incompletos. Si falla el guardado, conserva tu copia y vuelve a intentarlo. El formato 4 conserva la recuperación pendiente del formato 3 si aún está dentro de plazo, con un diario separado.
 
 ## Tareas y exámenes
+
+Puedes crear una actividad sin asignatura: elige **Sin asignatura · General**. Se mostrará como **General** en Mis tareas e Inicio y podrá generar recordatorios cuando tenga fecha. No necesitas crear una asignatura para usar la agenda.
+
+Eliminar una tarea la mueve a **Papelera**. Durante diez segundos puedes pulsar **Deshacer** para recuperar su estado anterior. Después sigue disponible en la pestaña **Papelera**: **Restaurar** la devuelve a Pendientes con el mismo contenido y fecha. No se borra automáticamente ni genera avisos mientras está eliminada. **Todas** incluye las pendientes y completadas; la Papelera se consulta por separado.
 
 Al crear una tarea se muestran título, asignatura y fecha de entrega. **Más opciones** reúne tipo, prioridad, estado y notas. Al editar una actividad con detalles adicionales, este apartado se abre automáticamente y conserva sus valores aunque guardes con él plegado.
 
@@ -112,5 +116,5 @@ La instalación no sustituye una copia de seguridad. Puedes descargar tu curso d
 
 Cuando haya una versión nueva, aparecerá **Actualización disponible**. Puedes pulsar **Actualizar ahora** o dejarla para más tarde. La app espera tu elección antes de recargar.
 
-En el paso al formato de datos 3 se ofrece descargar la copia anterior antes de continuar. Se conservan los totales existentes, marcados como pendientes de confirmar. Actualiza también la app de tus otros dispositivos antes de sincronizar el formato nuevo.
+En el paso al formato de datos 4 se ofrece descargar la copia anterior antes de continuar. Se conservan los datos existentes y se añaden tareas generales y Papelera. Actualiza también la app de tus otros dispositivos antes de sincronizar el formato nuevo.
 

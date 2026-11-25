@@ -48,7 +48,7 @@
     '\nthis.getState = () => state; this.setState = value => { state = value; };';
   vm.createContext(sandbox);
   vm.runInContext(source, sandbox);
-  const state = sandbox.normalizeState({
+  let state = sandbox.normalizeState({
     etapa: 'fp_superior',
     asignaturas: [
       { id: 'a1', nombre: 'Redes', horasTotales: 120 },
@@ -113,6 +113,7 @@
   element('#dlg-task-titulo').value = 'Ejercicios';
   element('#dlg-task-asig').value = 'a1';
   sandbox.guardarTareaModal();
+  state = sandbox.getState();
   const basic = state.tareas[state.tareas.length - 1];
   assert.equal(basic.tipo, 'deberes');
   assert.equal(basic.prioridad, 'normal');
@@ -127,7 +128,8 @@
   element('#dlg-task-titulo').value = 'Examen SQL';
   element('#dlg-task-desc').value = 'Temas 1 y 2';
   sandbox.guardarTareaModal();
-  const advanced = state.tareas[state.tareas.length - 1];
+  state = sandbox.getState();
+  let advanced = state.tareas[state.tareas.length - 1];
   assert.equal(advanced.tipo, 'examen');
   assert.equal(advanced.prioridad, 'alta');
   assert.equal(advanced.descripcion, 'Temas 1 y 2');
@@ -144,6 +146,7 @@
   element('#task-more-options').open = false;
   element('#dlg-task-titulo').value = 'Examen SQL actualizado';
   sandbox.guardarTareaModal();
+  state = sandbox.getState(); advanced = state.tareas.find(t => t.id === advanced.id);
   assert.equal(state.tareas.length, count);
   assert.equal(advanced.estado, 'completada', 'editar no pierde el estado completado');
   assert.equal(advanced.tipo, 'examen');

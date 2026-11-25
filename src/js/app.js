@@ -163,7 +163,7 @@ function renderDashboardPriorities() {
   if (!cont) return;
   const progress = getSetupProgress();
   const pending = (state.tareas || []).filter(t => t.estado === 'pendiente').sort((a, b) => (a.fechaEntrega || '9999').localeCompare(b.fechaEntrega || '9999'));
-  const hasContent = (progress.hidden || progress.step === 4) && (progress.subjects.length > 0 || pending.length > 0);
+  const hasContent = pending.length > 0 || (progress.hidden || progress.step === 4) && progress.subjects.length > 0;
   cont.classList.toggle('hidden', !hasContent);
   if (!hasContent) { cont.innerHTML = ''; return; }
   const next = findNextClass();
@@ -183,7 +183,7 @@ function renderDashboardPriorities() {
     <section class="priority-item priority-task">
       <h3>${uiIcon('clock')} Entrega más cercana</h3>
       <p class="priority-title">${task ? esc(task.titulo) : 'Todo al día'}</p>
-      <p class="priority-meta">${task ? esc(formatoEntrega(task.fechaEntrega)) + (taskSubject ? ' · ' + esc(taskSubject.nombre) : '') : 'Cuando añadas una tarea, la verás aquí.'}</p>
+      <p class="priority-meta">${task ? esc(formatoEntrega(task.fechaEntrega)) + ' · ' + esc(taskSubject?.nombre || (!task.asignaturaId ? 'General' : task.asignaturaNombre || 'Asignatura')) : 'Cuando añadas una tarea, la verás aquí.'}</p>
       <button class="text-action" type="button" data-dashboard-action="${task ? 'tareas' : 'nueva-tarea'}">${task ? 'Ver mis tareas' : 'Añadir tarea'} ${uiIcon(task ? 'arrow' : 'plus')}</button>
     </section>`;
 }
@@ -273,9 +273,9 @@ function renderDashboardAlerts() {
   tareas.forEach(t => {
     const d = diasHasta(t.fechaEntrega);
     if (d != null && d < 0) {
-      avisos.push({ type: 'danger', text: `${uiIcon('clock')} Tarea vencida: <strong>${esc(t.titulo)}</strong> (${esc(t.asignaturaNombre)}).` });
+      avisos.push({ type: 'danger', text: `${uiIcon('clock')} Tarea vencida: <strong>${esc(t.titulo)}</strong> (${esc(t.asignaturaNombre || (!t.asignaturaId ? 'General' : 'Asignatura'))}).` });
     } else if (d != null && d === 0) {
-      avisos.push({ type: 'warn', text: `${uiIcon('clock')} Tarea para hoy: <strong>${esc(t.titulo)}</strong> (${esc(t.asignaturaNombre)}).` });
+      avisos.push({ type: 'warn', text: `${uiIcon('clock')} Tarea para hoy: <strong>${esc(t.titulo)}</strong> (${esc(t.asignaturaNombre || (!t.asignaturaId ? 'General' : 'Asignatura'))}).` });
     }
   });
 
@@ -383,7 +383,7 @@ function renderDashboardRecentActivity() {
   const cont = $('#dash-recent-activity');
   if (!cont) return;
   const faltasRecientes = [...state.faltas].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 3);
-  const tareasRecientes = [...(state.tareas || [])].sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion)).slice(0, 3);
+  const tareasRecientes = (state.tareas || []).filter(t => t.estado !== 'eliminada').sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion)).slice(0, 3);
 
   const items = [];
   faltasRecientes.forEach(f => {

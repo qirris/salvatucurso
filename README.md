@@ -28,9 +28,11 @@ Después incorporé los exámenes y las tareas: quería poder consultar las falt
 | --- | --- | --- |
 | Registrar faltas manuales o por clases de un día. | Consultar el horario y sus asignaturas por colores. | Usar la app sin cuenta o entrar con Google. |
 | Distinguir horas estimadas y confirmadas y guardar criterios del centro. | Preparar exámenes, entregas y notas. | Sincronizar el curso con revisión de cambios. |
-| Revisar el historial y recuperar borrados con Deshacer. | Configurar vacaciones y días sin clase. | Descargar copias y recibir avisos con la app cerrada. |
+| Revisar el historial y recuperar borrados con Deshacer. | Configurar vacaciones y días sin clase; crear tareas generales. | Descargar copias y recibir avisos con la app cerrada. |
 
 Las capturas de esta presentación las he tomado de la aplicación real en escritorio. Muestran el horario y los formularios de asignaturas y tareas; se han excluido las pantallas con el correo de la cuenta y las cifras de faltas. El [caso de estudio](docs/caso-de-estudio.md) incluye las otras capturas y explica las decisiones, las comprobaciones y las limitaciones actuales.
+
+Las tareas pueden estar vinculadas a una asignatura o ser **Generales**. Al eliminarlas pasan a **Papelera**, desde donde se pueden restaurar; **Deshacer** sigue disponible durante diez segundos. Las capturas anteriores a esta función conservan el formulario de aquel momento.
 
 ## Cómo se ha construido
 
@@ -81,6 +83,7 @@ La aplicación está publicada en Cloudflare y permite acceso con Google. El reg
 - [Caso de estudio: origen, decisiones y desarrollo](docs/caso-de-estudio.md).
 - [Guía de uso e instalación](docs/guia-de-uso.md).
 - [Cuentas, sincronización, avisos y publicación](docs/notificaciones.md).
+- [API de tareas para integraciones privadas](docs/api-tareas.md).
 - [Comprobaciones pendientes](instrucciones/TAREAS_PENDIENTES.md).
 - [Referencias sobre evaluación continua en Andalucía](docs/referencia-normativa-evaluacion-continua-andalucia.txt).
 

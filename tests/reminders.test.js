@@ -155,6 +155,21 @@ function environment(options = {}) {
   const offlinePage = await pending;
   assert.equal(offlinePage.redirected, false, 'la navegación offline limpia la marca de redirección del alojamiento');
   assert.match(await offlinePage.text(), /SalvaTuCurso/);
+  const pages = new Map(), writes = [];
+  sw.caches = { async match(key) { return pages.get(key)?.clone(); }, async open() { return { async put(key, response) { writes.push(key); pages.set(key, response); } }; } };
+  const navigate = async pathname => {
+    const waits = [];
+    handlers.fetch({ request: { method: 'GET', url: 'https://example.test/mi-asistencia/' + pathname, mode: 'navigate' },
+      respondWith(promise) { pending = promise; }, waitUntil(promise) { waits.push(promise); } });
+    const response = await pending; await Promise.all(waits); return response;
+  };
+  sw.fetch = async req => new Response(req.url.includes('privacidad') ? 'Política de privacidad' : 'Aplicación principal');
+  await navigate('?actividad=ejemplo'); await navigate('privacidad.html?consulta=1');
+  assert.deepEqual(writes, ['./index.html','./privacidad.html'], 'visitar privacidad no sustituye la aplicación guardada');
+  await navigate('ruta-inexistente');assert.equal(writes.length,2,'solo conserva navegaciones públicas conocidas');
+  sw.fetch = async () => { throw Error('Sin conexión'); };
+  assert.equal(await (await navigate('')).text(),'Aplicación principal');
+  assert.equal(await (await navigate('privacidad.html')).text(),'Política de privacidad');
   sw.caches = { async match() { return new Response('configuración guardada'); }, async open() { return { async put() {} }; } };
   sw.fetch = async () => new Response('configuración actualizada');
   const configEvent = { request: { method: 'GET', url: 'https://example.test/mi-asistencia/src/js/push-config.js?v=43', mode: 'cors' }, respondWith(promise) { pending = promise; }, waitUntil() {} };

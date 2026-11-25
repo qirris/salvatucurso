@@ -58,7 +58,7 @@
     sandbox.render = () => {};
     sandbox.setState(sandbox.normalizeState(clone(sample)));
     const save = () => sandbox.saveState();
-    if (!store.salvatucursoStateV3) save();
+    if (!store.salvatucursoStateV4) save();
     return { s: sandbox, state: () => sandbox.getState(), store, node, document, events, winEvents, save,
       fail(key) { failKey = key; },
       advance(ms) { now += ms; let next; while ((next = [...timers.entries()].find(([, timer]) => timer.at <= now))) { timers.delete(next[0]); next[1].callback(); } },
@@ -71,7 +71,7 @@
   assert.equal(s.UndoManager.remove('tareas', 't2'), true);
   assert.equal(s.UndoManager.remove('tareas', 't1'), true);
   assert.equal(s.UndoManager.remove('faltas', 'f1'), true);
-  h.state().tareas[0].titulo = 'Editada después del borrado'; h.save();
+  h.state().tareas[2].titulo = 'Editada después del borrado'; h.save();
   assert.equal(h.node('#undo-message').textContent, '3 registros eliminados.');
   assert.equal(s.UndoManager.restore(), true);
   assert.deepEqual(clone(h.state().tareas.map(t => t.id)), ['t1', 't2', 't3']);
@@ -79,7 +79,7 @@
   assert.equal(h.state().tareas[2].titulo, 'Editada después del borrado');
   assert.deepEqual(clone(h.state().faltas), original.faltas);
   assert.deepEqual(clone(h.state().config), original.config);
-  assert.equal(h.store.salvatucursoDeshacerV3, undefined);
+  assert.equal(h.store.salvatucursoDeshacerV4, undefined);
   assert.equal(h.node('#undo-notice').hidden, true);
   assert.equal(s.UndoManager.restore(), false, 'no se duplica la recuperación');
   // Recarga, vencimiento, foco y segundo plano.
@@ -101,23 +101,23 @@
   assert.equal(s.UndoManager.restore(), true, 'el tiempo se pausa fuera de la app');
   // Error al guardar: no borrar ni sustituir el aviso anterior.
   h = harness(); s = h.s; s.UndoManager.bind();
-  h.fail('salvatucursoDeshacerV3');
+  h.fail('salvatucursoDeshacerV4');
   assert.equal(s.UndoManager.remove('tareas', 't1'), false); assert.equal(h.state().tareas.length, 3);
   h.fail(''); s.UndoManager.remove('tareas', 't1');
-  const journal = h.store.salvatucursoDeshacerV3;
-  h.fail('salvatucursoStateV3');
+  const journal = h.store.salvatucursoDeshacerV4;
+  h.fail('salvatucursoStateV4');
   assert.equal(s.UndoManager.remove('faltas', 'f1'), false); assert.equal(h.state().faltas.length, 1);
-  assert.equal(h.store.salvatucursoDeshacerV3, journal);
-  assert.equal(s.UndoManager.restore(), false); assert.equal(h.state().tareas.length, 2);
+  assert.equal(h.store.salvatucursoDeshacerV4, journal);
+  assert.equal(s.UndoManager.restore(), false); assert.equal(h.state().tareas.filter(t => t.estado !== 'eliminada').length, 2);
   h.fail(''); assert.equal(s.UndoManager.restore(), true);
   // No restaurar sobre cambios de otra pestaña ni recuperar tras un reset.
   s.UndoManager.remove('tareas', 't1');
-  h.store.salvatucursoStateV3 = JSON.stringify({ changed: true });
-  assert.equal(s.UndoManager.restore(), false); assert.equal(h.state().tareas.length, 2);
+  h.store.salvatucursoStateV4 = JSON.stringify({ changed: true });
+  assert.equal(s.UndoManager.restore(), false); assert.equal(h.state().tareas.filter(t => t.estado !== 'eliminada').length, 2);
   h.save(); s.UndoManager.remove('tareas', 't2'); s.deleteAll();
   assert.equal(s.UndoManager.restore(), false); assert.equal(h.state().tareas.length, 0);
   h = harness(); s = h.s; s.UndoManager.bind(); s.UndoManager.remove('faltas', 'f1');
-  h.winEvents.storage[0]({ key: 'salvatucursoStateV3' }); assert.equal(s.UndoManager.restore(), false);
+  h.winEvents.storage[0]({ key: 'salvatucursoStateV4' }); assert.equal(s.UndoManager.restore(), false);
   // Si la clase cambia durante el plazo, la tarea vuelve sin un enlace incorrecto.
   h = harness(); s = h.s;
   Object.assign(h.state().tareas[0], task('t1', 'a1', 'lunes|h1')); h.save(); s.UndoManager.bind();
@@ -177,10 +177,10 @@
   assert.equal(s.getCopyDayPlan('lunes', ['martes']).patches.length, 0);
   // Fallo de almacenamiento y revisión obsoleta: no modificar el horario.
   h = harness(); s = h.s;
-  const stateBefore = clone(h.state()); h.fail('salvatucursoStateV3');
+  const stateBefore = clone(h.state()); h.fail('salvatucursoStateV4');
   assert.equal(s.copyScheduleDay('lunes', ['martes']).ok, false);
   assert.deepEqual(clone(h.state()), stateBefore);
-  h.fail(''); h.store.salvatucursoStateV3 = JSON.stringify({ changed: true });
+  h.fail(''); h.store.salvatucursoStateV4 = JSON.stringify({ changed: true });
   assert.equal(s.copyScheduleDay('lunes', ['martes']).ok, false);
   assert.deepEqual(clone(h.state()), stateBefore);
   h.save();
@@ -195,7 +195,7 @@
   s.toggleScheduleEdit(true); h.state().horario.diasSalida.martes = '09:00'; h.save();
   s.cancelarEdicionHorario();
   assert.deepEqual(clone(h.state().horario), scheduleBefore);
-  assert.deepEqual(JSON.parse(h.store.salvatucursoStateV3).horario, scheduleBefore);
+  assert.deepEqual(JSON.parse(h.store.salvatucursoStateV4).horario, scheduleBefore);
   assert.equal(s.copyScheduleDay('lunes', ['martes']).ok, true);
   // Los botones de faltas del historial usan los mismos flujos de edición y deshacer.
   h = harness(); s = h.s; s.bindHistory(); s.UndoManager.bind();

@@ -50,7 +50,7 @@ const sample = {
 };
 
 const store = {};
-store['salvatucursoStateV3'] = JSON.stringify(sample);
+store['salvatucursoStateV4'] = JSON.stringify(sample);
 
 const dummyEl = () => ({
   value: '', innerHTML: '', textContent: '', style: {}, dataset: {},

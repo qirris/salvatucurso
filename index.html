@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
   <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
-  <link rel="stylesheet" href="src/css/styles.css?v=48">
+  <link rel="stylesheet" href="src/css/styles.css?v=49">
 </head>
 <body>
   <div class="app-shell">
@@ -336,6 +336,7 @@
           <button class="day-tab active" type="button" role="tab" aria-selected="true" data-statustab="pendiente">Pendientes</button>
           <button class="day-tab" type="button" role="tab" aria-selected="false" data-statustab="completada">Completadas</button>
           <button class="day-tab" type="button" role="tab" aria-selected="false" data-statustab="todos">Todas</button>
+          <button class="day-tab" type="button" role="tab" aria-selected="false" data-statustab="eliminada">Papelera</button>
         </div>
 
         <details class="task-filters" id="task-filter-panel">
@@ -978,10 +979,10 @@
 <div class="form-grid">
         <div class="field">
           <label for="dlg-task-titulo">Título *</label>
-          <input type="text" id="dlg-task-titulo" placeholder="Ej: Ejercicios página 45">
+          <input type="text" id="dlg-task-titulo" maxlength="200" placeholder="Ej: Ejercicios página 45">
         </div>
         <div class="field">
-          <label for="dlg-task-asig">Asignatura *</label>
+          <label for="dlg-task-asig">Asignatura (opcional)</label>
           <select id="dlg-task-asig"></select>
         </div>
         <div class="field">
@@ -1052,8 +1053,8 @@
 
   <dialog id="dialog-data-migration" aria-labelledby="migration-title">
     <div class="dialog-body">
-      <div class="dialog-head"><h3 id="migration-title">Revisa las horas de tu curso</h3></div>
-      <div class="dialog-content"><p>La nueva versión distingue las horas estimadas de las confirmadas. Se conservarán tus asignaturas, faltas, tareas y horario. Las horas actuales quedarán pendientes de confirmar y el curso anterior seguirá guardado como respaldo en este navegador.</p><p>Puedes descargar una copia antes de continuar.</p><p class="form-feedback" id="migration-status" role="alert"></p></div>
+      <div class="dialog-head"><h3 id="migration-title">Actualiza los datos de tu curso</h3></div>
+      <div class="dialog-content"><p>La nueva versión añade tareas generales y una Papelera para recuperar actividades eliminadas. Se conservarán tus asignaturas, horas, criterios, faltas, tareas y horario. El curso anterior seguirá guardado como respaldo en este navegador.</p><p>Puedes descargar una copia antes de continuar. Actualiza también la app de tus otros dispositivos para sincronizar.</p><p class="form-feedback" id="migration-status" role="alert"></p></div>
       <div class="dialog-actions"><button class="btn btn-secondary" type="button" id="migration-download">Descargar copia anterior</button><button class="btn" type="button" id="migration-continue">Continuar</button></div>
     </div>
   </dialog>
@@ -1084,18 +1085,18 @@
 
   <script src="src/js/update.js?v=1"></script>
   <script src="src/js/attendance.js?v=44"></script>
-  <script src="src/js/attendance-ui.js?v=1"></script>
+  <script src="src/js/attendance-ui.js?v=2"></script>
   <script src="src/js/calendar.js?v=43"></script>
   <script src="src/js/absence-day.js?v=44"></script>
-  <script src="src/js/storage.js?v=44"></script>
+  <script src="src/js/storage.js?v=45"></script>
   <script src="src/js/schedule.js?v=45"></script>
-  <script src="src/js/tasks.js?v=43"></script>
+  <script src="src/js/tasks.js?v=44"></script>
   <script src="src/js/history.js?v=44"></script>
-  <script src="src/js/recovery.js?v=44"></script>
+  <script src="src/js/recovery.js?v=45"></script>
   <script src="src/js/push-config.js?v=43"></script>
-  <script src="src/js/account.js?v=46"></script>
-  <script src="src/js/reminders.js?v=44"></script>
-  <script src="src/js/app.js?v=44"></script>
+  <script src="src/js/account.js?v=47"></script>
+  <script src="src/js/reminders.js?v=45"></script>
+  <script src="src/js/app.js?v=45"></script>
 
   <!-- Nodos ocultos de compatibilidad mientras se renueva la caché de la PWA -->
   <p id="falta-legal" class="hidden" aria-hidden="true"></p>

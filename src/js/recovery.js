@@ -1,6 +1,6 @@
 /* Recuperación breve de tareas y faltas; separada de los datos académicos. */
 var UndoManager = (function recoveryController() {
-  const KEY = 'salvatucursoDeshacerV3';
+  const KEY = 'salvatucursoDeshacerV4';
   const WINDOW_MS = 10000;
   let batch = null, timer = null, bound = false;
   const pauses = new Set();
@@ -56,7 +56,7 @@ var UndoManager = (function recoveryController() {
   function remove(collection, id, originDialog = null) {
     if (!['tareas', 'faltas'].includes(collection)) return false;
     const index = state[collection].findIndex(item => item.id === id);
-    if (index < 0) return false;
+    if (index < 0 || (collection === 'tareas' && state[collection][index].estado === 'eliminada')) return false;
     if (batch && !pauses.size && Date.now() >= batch.expiresAt) expire();
     const previous = state[collection];
     const previousBatch = batch && batch.kind !== 'created' ? batch : null;
@@ -67,9 +67,10 @@ var UndoManager = (function recoveryController() {
     };
     let previousRaw;
     try {
+      if (!isStoredStateCurrent()) throw new Error('Datos modificados en otra pestaña');
       previousRaw = localStorage.getItem(KEY);
       localStorage.setItem(KEY, JSON.stringify(next));
-      state[collection] = previous.filter((item, i) => i !== index);
+      state[collection] = collection === 'tareas' ? previous.map((item, i) => i === index ? { ...item, estado: 'eliminada' } : item) : previous.filter((item, i) => i !== index);
       saveState();
     } catch (error) {
       state[collection] = previous;
@@ -168,8 +169,15 @@ var UndoManager = (function recoveryController() {
     const next = { tareas: state.tareas.slice(), faltas: state.faltas.slice() };
     let count = 0;
     batch.entries.slice().reverse().forEach(entry => {
+      if (entry.collection === 'tareas') {
+        const index = next.tareas.findIndex(item => item.id === entry.item.id);
+        if (index >= 0) {
+          if (JSON.stringify(next.tareas[index]) !== JSON.stringify({ ...entry.item, estado: 'eliminada' })) return;
+          next.tareas[index] = restoredItem(entry); count++; return;
+        }
+      }
       if (next[entry.collection].some(item => item.id === entry.item.id)) return;
-      if (!state.asignaturas.some(a => a.id === entry.item.asignaturaId)) return;
+      if (entry.item.asignaturaId && !state.asignaturas.some(a => a.id === entry.item.asignaturaId)) return;
       next[entry.collection].splice(Math.min(entry.index, next[entry.collection].length), 0, restoredItem(entry));
       count++;
     });
@@ -200,13 +208,19 @@ var UndoManager = (function recoveryController() {
       if (event.key === KEY || event.key === STORAGE_KEY || event.key === null) clear(false);
     });
     try {
+      if (!localStorage.getItem(KEY + '_migrado')) {
+        const old = localStorage.getItem('salvatucursoDeshacerV3');
+        if (!localStorage.getItem(KEY) && old) localStorage.setItem(KEY, old);
+        localStorage.setItem(KEY + '_migrado', '1');
+      }
       const saved = read();
       if (!saved || (saved.kind !== undefined && saved.kind !== 'created') || typeof saved.token !== 'string' || !Number.isFinite(saved.expiresAt) || saved.expiresAt <= Date.now() || !Array.isArray(saved.entries)) {
         clear(); return;
       }
       saved.entries = saved.entries.filter(entry => validEntry(entry) &&
-        (saved.kind === 'created' ? entry.collection === 'faltas' && state.faltas.some(item => item.id === entry.item.id) : !state[entry.collection].some(item => item.id === entry.item.id)) &&
-        state.asignaturas.some(a => a.id === entry.item.asignaturaId));
+        (saved.kind === 'created' ? entry.collection === 'faltas' && state.faltas.some(item => item.id === entry.item.id) :
+          !state[entry.collection].some(item => item.id === entry.item.id) || entry.collection === 'tareas' && state.tareas.some(item => item.id === entry.item.id && item.estado === 'eliminada')) &&
+        (!entry.item.asignaturaId || state.asignaturas.some(a => a.id === entry.item.asignaturaId)));
       if (!saved.entries.length) { clear(); return; }
       batch = saved;
       if (document.hidden) pauses.add('hidden');
